@@ -29,13 +29,12 @@ export default function LoginPage() {
   return (
     <main className="container" style={{ paddingTop: 48 }}>
       <div style={{ textAlign: "center", marginBottom: 8 }}>
-        <svg width="120" height="100" viewBox="0 0 120 100">
-          <path d="M15,60 Q60,10 105,60 Q90,45 75,58 Q60,42 45,58 Q30,45 15,60 Z"
-            fill="none" stroke="#3A2E23" strokeWidth="3" />
-          <circle cx="60" cy="30" r="4" fill="none" stroke="#C1673F" strokeWidth="2" />
-          <line x1="60" y1="60" x2="60" y2="95" stroke="#5A4433" strokeWidth="4" strokeLinecap="round" />
-          <path d="M60,95 q10,3 8,10" fill="none" stroke="#5A4433" strokeWidth="4" strokeLinecap="round" />
-        </svg>
+        <img
+          src="/images/login-umbrella.jpg"
+          alt="靠在門邊的破傘"
+          style={{ width: "100%", maxWidth: 320, borderRadius: 6, display: "inline-block",
+            boxShadow: "0 4px 16px rgba(58,46,35,0.25)" }}
+        />
       </div>
       <p style={{ textAlign: "center", color: "var(--ink-soft)", fontSize: 14, marginTop: 0 }}>
         它漏了一個洞，但你還是帶著它上路了。

@@ -9,9 +9,7 @@ export const dynamic = "force-dynamic";
 function ChapterIcon({ name }: { name: string }) {
   const common = { width: 30, height: 30, viewBox: "0 0 40 40" };
   if (name === "snail") return (
-    <svg {...common}><circle cx="20" cy="20" r="18" fill="#E4EEE2" />
-      <path d="M12,26 q0,-8 8,-8 q6,0 6,6 q0,4 -4,4 q-3,0 -3,-3" fill="none" stroke="#3F5B44" strokeWidth="2" />
-      <path d="M12,26 q10,4 16,-2" fill="none" stroke="#3F5B44" strokeWidth="2" strokeLinecap="round" /></svg>
+    <img src="/images/icon-snail.png" alt="" style={{ width: 30, height: 30, objectFit: "contain" }} />
   );
   if (name === "seed") return (
     <svg {...common}><circle cx="20" cy="20" r="18" fill="#E4EEE2" />
