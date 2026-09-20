@@ -1,0 +1,69 @@
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { ensureReady, getPool } from "@/lib/db";
+import { readSession } from "@/lib/session";
+import { STAGE1_KEYS } from "@/lib/fields";
+
+export const dynamic = "force-dynamic";
+
+export default async function TeacherDashboard() {
+  const session = readSession();
+  if (!session || session.role !== "teacher") redirect("/teacher");
+
+  await ensureReady();
+  const pool = getPool();
+
+  const groupsRes = await pool.query(
+    `SELECT class, group_no, COUNT(*) as member_count
+     FROM students WHERE group_no IS NOT NULL
+     GROUP BY class, group_no ORDER BY class, group_no`
+  );
+
+  const finalsRes = await pool.query(
+    `SELECT class, group_no, COUNT(DISTINCT field_key) as done
+     FROM group_finals WHERE field_key = ANY($1)
+     GROUP BY class, group_no`,
+    [STAGE1_KEYS]
+  );
+  const doneMap = new Map(finalsRes.rows.map((r) => [`${r.class}-${r.group_no}`, Number(r.done)]));
+
+  const unassignedRes = await pool.query(
+    `SELECT COUNT(*) as c FROM students WHERE group_no IS NULL`
+  );
+
+  return (
+    <main className="container" style={{ paddingTop: 40 }}>
+      <h2 className="story-title" style={{ fontSize: 20 }}>引路人視角（唯讀）</h2>
+      <p style={{ color: "#7a6a52" }}>尚未分組人數：{unassignedRes.rows[0].c}</p>
+      <div className="card-story">
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <thead>
+            <tr style={{ textAlign: "left", borderBottom: "2px solid var(--forest)" }}>
+              <th style={{ padding: 8 }}>班級</th>
+              <th style={{ padding: 8 }}>組別</th>
+              <th style={{ padding: 8 }}>人數</th>
+              <th style={{ padding: 8 }}>學習任務1 完成度</th>
+              <th style={{ padding: 8 }}></th>
+            </tr>
+          </thead>
+          <tbody>
+            {groupsRes.rows.map((g) => {
+              const done = doneMap.get(`${g.class}-${g.group_no}`) || 0;
+              return (
+                <tr key={`${g.class}-${g.group_no}`} style={{ borderBottom: "1px solid #eee2cc" }}>
+                  <td style={{ padding: 8 }}>{g.class}</td>
+                  <td style={{ padding: 8 }}>第 {g.group_no} 組</td>
+                  <td style={{ padding: 8 }}>{g.member_count}</td>
+                  <td style={{ padding: 8 }}>{done} / {STAGE1_KEYS.length}</td>
+                  <td style={{ padding: 8 }}>
+                    <Link href={`/teacher/group/${g.class}/${g.group_no}`}>查看內容</Link>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </main>
+  );
+}

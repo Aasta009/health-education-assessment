@@ -1,0 +1,107 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;700;900&family=Noto+Sans+TC:wght@400;500;600&display=swap');
+
+:root {
+  --paper: #F4ECD9;
+  --paper-dark: #EADFC5;
+  --ink: #3A2E23;
+  --ink-soft: #6B5C4B;
+  --forest: #3F5B44;
+  --forest-dark: #2E4633;
+  --terracotta: #C1673F;
+  --dusk: #46618C;
+  --gold: #D6A756;
+  --line: #d9cba9;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  background: var(--paper);
+  color: var(--ink);
+  margin: 0;
+  font-family: 'Noto Sans TC', sans-serif;
+  background-image:
+    radial-gradient(circle at 20% 10%, rgba(255,255,255,0.35), transparent 40%),
+    radial-gradient(circle at 80% 80%, rgba(63,91,68,0.06), transparent 45%);
+}
+
+h1, h2, h3, .story-title {
+  font-family: 'Noto Serif TC', serif;
+  font-weight: 900;
+  color: var(--ink);
+  letter-spacing: 0.02em;
+}
+
+a { color: var(--forest); }
+button { cursor: pointer; font-family: inherit; }
+
+.container { max-width: 760px; margin: 0 auto; padding: 24px 16px 80px; }
+
+/* ---- storybook button ---- */
+.btn-story {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: var(--forest);
+  color: var(--paper);
+  border: none;
+  border-radius: 3px;
+  padding: 13px 28px;
+  font-family: 'Noto Serif TC', serif;
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: 0.04em;
+  box-shadow: 3px 3px 0 var(--forest-dark);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.btn-story:hover { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--forest-dark); }
+.btn-story:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--forest-dark); }
+.btn-story:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; transform: none; }
+
+.btn-story.outline {
+  background: transparent;
+  color: var(--forest);
+  border: 2px solid var(--forest);
+  box-shadow: 3px 3px 0 var(--line);
+}
+
+/* ---- storybook card / page frame ---- */
+.card-story {
+  background: #FCF8ED;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 22px 24px;
+  margin-bottom: 18px;
+  position: relative;
+}
+.card-story::before {
+  content: "";
+  position: absolute; inset: 6px;
+  border: 1px solid rgba(58,46,35,0.08);
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+textarea, input[type=text], input[type=password] {
+  width: 100%;
+  border: 1.5px solid var(--line);
+  background: #FCF8ED;
+  border-radius: 3px;
+  padding: 11px 12px;
+  font-size: 15px;
+  font-family: 'Noto Sans TC', sans-serif;
+  color: var(--ink);
+}
+textarea:focus, input:focus { outline: 2px solid var(--forest); outline-offset: 1px; }
+
+.ribbon {
+  display: inline-block;
+  padding: 3px 12px;
+  border-radius: 2px;
+  font-size: 12.5px;
+  font-family: 'Noto Serif TC', serif;
+  font-weight: 700;
+}
+.ribbon-done { background: #E4EEE2; color: var(--forest-dark); }
+.ribbon-pending { background: #F3E4CE; color: #8a5a1f; }
