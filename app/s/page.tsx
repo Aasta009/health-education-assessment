@@ -6,25 +6,17 @@ import { FIELDS, STAGE1_KEYS, GROUP_STORY } from "@/lib/fields";
 
 export const dynamic = "force-dynamic";
 
+const ICON_FILES: Record<string, string> = {
+  snail: "icon-snail.png",
+  seed: "icon-seed.png",
+  river: "icon-river.png",
+  house: "icon-house.png",
+};
+
 function ChapterIcon({ name }: { name: string }) {
-  const common = { width: 30, height: 30, viewBox: "0 0 40 40" };
-  if (name === "snail") return (
-    <img src="/images/icon-snail.png" alt="" style={{ width: 30, height: 30, objectFit: "contain" }} />
-  );
-  if (name === "seed") return (
-    <svg {...common}><circle cx="20" cy="20" r="18" fill="#E4EEE2" />
-      <path d="M20,28 C14,20 14,12 20,10 C26,12 26,20 20,28 Z" fill="none" stroke="#3F5B44" strokeWidth="2" />
-      <line x1="20" y1="28" x2="20" y2="32" stroke="#3F5B44" strokeWidth="2" /></svg>
-  );
-  if (name === "river") return (
-    <svg {...common}><circle cx="20" cy="20" r="18" fill="#E4EEE2" />
-      <path d="M8,18 q4,-4 8,0 t8,0 t8,0" fill="none" stroke="#46618C" strokeWidth="2" />
-      <path d="M8,25 q4,-4 8,0 t8,0 t8,0" fill="none" stroke="#46618C" strokeWidth="2" /></svg>
-  );
+  const file = ICON_FILES[name] || ICON_FILES.snail;
   return (
-    <svg {...common}><circle cx="20" cy="20" r="18" fill="#E4EEE2" />
-      <rect x="12" y="18" width="16" height="12" fill="none" stroke="#3F5B44" strokeWidth="2" />
-      <polygon points="10,18 20,10 30,18" fill="none" stroke="#3F5B44" strokeWidth="2" /></svg>
+    <img src={`/images/${file}`} alt="" style={{ width: 32, height: 32, objectFit: "contain" }} />
   );
 }
 
@@ -77,8 +69,8 @@ export default async function StudentDashboard() {
           const groupDone = groupFields.every((f) => doneKeys.has(f.key));
           return (
             <div key={g} style={{ position: "relative", marginBottom: 26 }}>
-              <div style={{ position: "absolute", left: -26, top: 0,
-                width: 30, height: 30, borderRadius: "50%",
+              <div style={{ position: "absolute", left: -28, top: -2,
+                width: 38, height: 38, borderRadius: "50%", overflow: "hidden",
                 background: groupDone ? "#D6A756" : "#FCF8ED",
                 border: "2px solid var(--forest)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 {story && <ChapterIcon name={story.icon} />}
