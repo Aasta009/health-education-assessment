@@ -19,6 +19,11 @@ export default function FieldPage() {
   async function load() {
     const res = await fetch(`/api/field/${key}`);
     if (res.status === 401) { router.push("/login"); return; }
+    if (res.status === 403) {
+      const d = await res.json().catch(() => ({}));
+      setErr(d.error || "這一段路還沒開放");
+      return;
+    }
     if (!res.ok) {
       const d = await res.json().catch(() => ({}));
       setErr(d.error || "載入失敗");

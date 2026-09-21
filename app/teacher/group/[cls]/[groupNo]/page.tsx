@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 export default async function TeacherGroupDetail({ params }: { params: { cls: string; groupNo: string } }) {
   const session = readSession();
-  if (!session || session.role !== "teacher") redirect("/teacher");
+  if (!session || session.role !== "staff") redirect("/login");
 
   await ensureReady();
   const pool = getPool();

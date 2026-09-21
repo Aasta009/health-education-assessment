@@ -1,8 +1,11 @@
 import { cookies } from "next/headers";
 
 export type StudentSession = { role: "student"; id: string; name: string; cls: string; groupNo: number | null; isLeader: boolean };
-export type TeacherSession = { role: "teacher" };
-export type Session = StudentSession | TeacherSession;
+// "staff" covers both the TA and the teacher. TA additionally controls stage
+// gating and can view every group; both can view everything read-only but
+// neither can ever edit a student's own words.
+export type StaffSession = { role: "staff"; kind: "teacher" | "ta" };
+export type Session = StudentSession | StaffSession;
 
 const COOKIE = "hea_session";
 

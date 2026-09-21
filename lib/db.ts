@@ -74,6 +74,13 @@ CREATE TABLE IF NOT EXISTS group_docs (
   updated_at TIMESTAMPTZ DEFAULT now(),
   PRIMARY KEY (class, group_no, version)
 );
+
+-- Controls how many stage-1 "chapters" (1-4) each class may currently see
+-- and edit. Only the TA may change this; students never advance themselves.
+CREATE TABLE IF NOT EXISTS stage_gate (
+  class TEXT PRIMARY KEY,
+  unlocked_level INT NOT NULL DEFAULT 1
+);
 `;
 
 async function ensureSchemaAndSeed() {
@@ -88,16 +95,39 @@ async function ensureSchemaAndSeed() {
     );
   }
 
-  // TA test/maintenance account: can log in on the student side to test the
-  // full flow (assigned to its own isolated test group so it never mixes
-  // with real students' data), and separately has teacher-passcode access
-  // to view every group read-only. Kept idempotent so re-running is safe.
+  // TA also has a plain student-side test account (isolated test group) so
+  // it can still exercise the full student flow when needed, separate from
+  // its "A113120009" staff-login code.
   await p.query(
     `INSERT INTO students (student_id, name, class, group_no, is_leader)
      VALUES ('113120009', 'TA測試帳號', 'T', 1, false)
      ON CONFLICT (student_id)
      DO UPDATE SET name = EXCLUDED.name, class = EXCLUDED.class,
                    group_no = EXCLUDED.group_no, is_leader = EXCLUDED.is_leader`
+  );
+
+  // Every class starts with only chapter 1 unlocked; the TA opens the rest.
+  for (const cls of ["A", "B", "T"]) {
+    await p.query(
+      `INSERT INTO stage_gate (class, unlocked_level) VALUES ($1, 1)
+       ON CONFLICT (class) DO NOTHING`,
+      [cls]
+    );
+  }
+}
+
+export async function getUnlockedLevel(cls: string): Promise<number> {
+  const pool = getPool();
+  const { rows } = await pool.query(`SELECT unlocked_level FROM stage_gate WHERE class = $1`, [cls]);
+  return rows[0]?.unlocked_level ?? 1;
+}
+
+export async function setUnlockedLevel(cls: string, level: number): Promise<void> {
+  const pool = getPool();
+  await pool.query(
+    `INSERT INTO stage_gate (class, unlocked_level) VALUES ($1, $2)
+     ON CONFLICT (class) DO UPDATE SET unlocked_level = EXCLUDED.unlocked_level`,
+    [cls, level]
   );
 }
 

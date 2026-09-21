@@ -23,7 +23,12 @@ export default function LoginPage() {
       setErr(data.error || "找不到這個學號，再看看是不是打錯了？");
       return;
     }
-    router.push("/s");
+    const data = await res.json();
+    if (data.session?.role === "staff") {
+      router.push("/teacher/dashboard");
+    } else {
+      router.push("/s");
+    }
   }
 
   return (

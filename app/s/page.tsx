@@ -2,7 +2,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ensureReady, getPool } from "@/lib/db";
 import { readSession } from "@/lib/session";
-import { FIELDS, STAGE1_KEYS, GROUP_STORY } from "@/lib/fields";
+import { FIELDS, STAGE1_KEYS, GROUP_STORY, LEVEL_BY_GROUP } from "@/lib/fields";
+import { getUnlockedLevel } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
@@ -45,6 +46,7 @@ export default async function StudentDashboard() {
     [session.cls, session.groupNo]
   );
   const doneKeys = new Set(finals.rows.map((r) => r.field_key));
+  const unlockedLevel = await getUnlockedLevel(session.cls);
 
   const stage1Fields = FIELDS.filter((f) => f.stage === 1);
   const groups = Array.from(new Set(stage1Fields.map((f) => f.group)));
@@ -67,8 +69,10 @@ export default async function StudentDashboard() {
           const story = GROUP_STORY[g];
           const groupFields = stage1Fields.filter((f) => f.group === g);
           const groupDone = groupFields.every((f) => doneKeys.has(f.key));
+          const chapterLevel = LEVEL_BY_GROUP[g] ?? 99;
+          const isLocked = chapterLevel > unlockedLevel;
           return (
-            <div key={g} style={{ position: "relative", marginBottom: 26 }}>
+            <div key={g} style={{ position: "relative", marginBottom: 26, opacity: isLocked ? 0.55 : 1 }}>
               <div style={{ position: "absolute", left: -28, top: -2,
                 width: 38, height: 38, borderRadius: "50%", overflow: "hidden",
                 background: groupDone ? "#D6A756" : "#FCF8ED",
@@ -83,15 +87,19 @@ export default async function StudentDashboard() {
                 )}
                 <h4 className="story-title" style={{ margin: "0 0 6px", fontSize: 17 }}>{story?.title || g}</h4>
                 {story && <p style={{ fontSize: 13.5, color: "var(--ink-soft)", margin: "0 0 12px", lineHeight: 1.7 }}>{story.blurb}</p>}
-                {groupFields.map((f) => (
-                  <div key={f.key} style={{ display: "flex", justifyContent: "space-between", alignItems: "center",
-                    padding: "9px 0", borderBottom: "1px solid var(--line)" }}>
-                    <Link href={`/s/field/${f.key}`}>{f.label}</Link>
-                    <span className={`ribbon ${doneKeys.has(f.key) ? "ribbon-done" : "ribbon-pending"}`}>
-                      {doneKeys.has(f.key) ? "已定稿" : "未定稿"}
-                    </span>
-                  </div>
-                ))}
+                {isLocked ? (
+                  <p style={{ fontSize: 13.5, color: "#8a5a1f", margin: 0 }}>這一段路還沒開放，請等老師／助教開啟。</p>
+                ) : (
+                  groupFields.map((f) => (
+                    <div key={f.key} style={{ display: "flex", justifyContent: "space-between", alignItems: "center",
+                      padding: "9px 0", borderBottom: "1px solid var(--line)" }}>
+                      <Link href={`/s/field/${f.key}`}>{f.label}</Link>
+                      <span className={`ribbon ${doneKeys.has(f.key) ? "ribbon-done" : "ribbon-pending"}`}>
+                        {doneKeys.has(f.key) ? "已定稿" : "未定稿"}
+                      </span>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           );
