@@ -91,7 +91,7 @@ export default function Home() {
               </p>
               <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
                 <Link href="/login"><button className="btn-story">拿起傘，出發　</button></Link>
-                <Link href="/login"><button className="btn-story outline">我是引路人（教師／助教）</button></Link>
+                <Link href="/staff"><button className="btn-story outline">我是引路人（教師／助教）</button></Link>
               </div>
             </>
           )}

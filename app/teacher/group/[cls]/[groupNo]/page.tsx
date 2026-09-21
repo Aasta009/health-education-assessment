@@ -1,13 +1,14 @@
 import { redirect } from "next/navigation";
 import { ensureReady, getPool } from "@/lib/db";
 import { readSession } from "@/lib/session";
+import Link from "next/link";
 import { FIELDS } from "@/lib/fields";
 
 export const dynamic = "force-dynamic";
 
 export default async function TeacherGroupDetail({ params }: { params: { cls: string; groupNo: string } }) {
   const session = readSession();
-  if (!session || session.role !== "staff") redirect("/login");
+  if (!session || session.role !== "staff") redirect("/staff");
 
   await ensureReady();
   const pool = getPool();
@@ -27,15 +28,24 @@ export default async function TeacherGroupDetail({ params }: { params: { cls: st
   );
   const finalMap = new Map(finals.rows.map((r) => [r.field_key, r]));
   const byField = new Map<string, any[]>();
+  const membersSeen = new Map<string, string>();
   for (const r of responses.rows) {
     if (!byField.has(r.field_key)) byField.set(r.field_key, []);
     byField.get(r.field_key)!.push(r);
+    membersSeen.set(r.student_id, r.name);
   }
 
   return (
     <main className="container" style={{ paddingTop: 32 }}>
       <a href="/teacher/dashboard">← 回到旅程總覽</a>
       <h2 className="story-title" style={{ fontSize: 20 }}>{cls} 班　第 {groupNo} 組</h2>
+      {membersSeen.size > 0 && (
+        <p style={{ color: "var(--ink-soft)", fontSize: 14 }}>
+          組員：{Array.from(membersSeen.entries()).map(([id, name]) => (
+            <Link key={id} href={`/teacher/student/${id}`} style={{ marginRight: 10 }}>{name}</Link>
+          ))}
+        </p>
+      )}
       {FIELDS.map((f) => {
         const members = byField.get(f.key) || [];
         const final = finalMap.get(f.key);
@@ -44,7 +54,9 @@ export default async function TeacherGroupDetail({ params }: { params: { cls: st
             <h4 style={{ marginTop: 0 }}>{f.label}</h4>
             {members.length === 0 && <p style={{ color: "#999" }}>尚無成員填寫</p>}
             {members.map((m) => (
-              <p key={m.student_id} style={{ margin: "4px 0" }}><b>{m.name}：</b>{m.content}</p>
+              <p key={m.student_id} style={{ margin: "4px 0" }}>
+                <Link href={`/teacher/student/${m.student_id}`}><b>{m.name}：</b></Link>{m.content}
+              </p>
             ))}
             <div style={{ marginTop: 8, padding: 10, background: "#f3ecdd", borderRadius: 8 }}>
               <b>組內定稿版本：</b>

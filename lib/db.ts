@@ -33,8 +33,10 @@ CREATE TABLE IF NOT EXISTS students (
   name TEXT NOT NULL,
   class TEXT NOT NULL,
   group_no INT,
-  is_leader BOOLEAN DEFAULT FALSE
+  is_leader BOOLEAN DEFAULT FALSE,
+  is_hidden BOOLEAN DEFAULT FALSE
 );
+ALTER TABLE students ADD COLUMN IF NOT EXISTS is_hidden BOOLEAN DEFAULT FALSE;
 
 CREATE TABLE IF NOT EXISTS responses (
   student_id TEXT NOT NULL REFERENCES students(student_id),
@@ -75,6 +77,31 @@ CREATE TABLE IF NOT EXISTS group_docs (
   PRIMARY KEY (class, group_no, version)
 );
 
+-- Append-only history: every individual save is recorded here, never
+-- overwritten, so the full editing process (including every duplicate or
+-- revised submission) is always exportable, not just the latest state.
+CREATE TABLE IF NOT EXISTS response_log (
+  id SERIAL PRIMARY KEY,
+  student_id TEXT NOT NULL,
+  class TEXT NOT NULL,
+  group_no INT,
+  field_key TEXT NOT NULL,
+  content TEXT,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Append-only history of every group finalize action, never overwritten.
+CREATE TABLE IF NOT EXISTS finalize_log (
+  id SERIAL PRIMARY KEY,
+  class TEXT NOT NULL,
+  group_no INT NOT NULL,
+  field_key TEXT NOT NULL,
+  content TEXT,
+  finalized_by TEXT,
+  finalized_by_name TEXT,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
 -- Controls how many stage-1 "chapters" (1-4) each class may currently see
 -- and edit. Only the TA may change this; students never advance themselves.
 CREATE TABLE IF NOT EXISTS stage_gate (
@@ -95,19 +122,20 @@ async function ensureSchemaAndSeed() {
     );
   }
 
-  // TA also has a plain student-side test account (isolated test group) so
-  // it can still exercise the full student flow when needed, separate from
-  // its "A113120009" staff-login code.
+  // Hidden test-student account: sits inside A班第1組 like a real member so
+  // QA can exercise the full group flow, but is excluded from the member
+  // list shown to the group's real students (see is_hidden filtering below).
   await p.query(
-    `INSERT INTO students (student_id, name, class, group_no, is_leader)
-     VALUES ('113120009', 'TA測試帳號', 'T', 1, false)
+    `INSERT INTO students (student_id, name, class, group_no, is_leader, is_hidden)
+     VALUES ('113120009', '測試學生', 'A', 1, false, true)
      ON CONFLICT (student_id)
      DO UPDATE SET name = EXCLUDED.name, class = EXCLUDED.class,
-                   group_no = EXCLUDED.group_no, is_leader = EXCLUDED.is_leader`
+                   group_no = EXCLUDED.group_no, is_leader = EXCLUDED.is_leader,
+                   is_hidden = EXCLUDED.is_hidden`
   );
 
   // Every class starts with only chapter 1 unlocked; the TA opens the rest.
-  for (const cls of ["A", "B", "T"]) {
+  for (const cls of ["A", "B"]) {
     await p.query(
       `INSERT INTO stage_gate (class, unlocked_level) VALUES ($1, 1)
        ON CONFLICT (class) DO NOTHING`,

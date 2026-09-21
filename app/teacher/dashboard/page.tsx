@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 export default async function TeacherDashboard() {
   const session = readSession();
-  if (!session || session.role !== "staff") redirect("/login");
+  if (!session || session.role !== "staff") redirect("/staff");
 
   await ensureReady();
   const pool = getPool();
@@ -35,6 +35,11 @@ export default async function TeacherDashboard() {
   const levelA = await getUnlockedLevel("A");
   const levelB = await getUnlockedLevel("B");
 
+  const byClass: Record<string, typeof groupsRes.rows> = {};
+  for (const g of groupsRes.rows) {
+    (byClass[g.class] ||= []).push(g);
+  }
+
   return (
     <main className="container" style={{ paddingTop: 40 }}>
       <h2 className="story-title" style={{ fontSize: 20 }}>
@@ -46,47 +51,48 @@ export default async function TeacherDashboard() {
 
       <div className="card-story">
         <h4 style={{ marginTop: 0 }}>匯出</h4>
-        <a href="/api/staff/export/raw"><button className="btn-story outline">匯出所有學生原始學習過程（Excel）</button></a>
+        <a href="/api/staff/export/raw"><button className="btn-story outline">匯出所有學生完整學習過程（Excel）</button></a>
       </div>
 
-      <div className="card-story">
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead>
-            <tr style={{ textAlign: "left", borderBottom: "2px solid var(--forest)" }}>
-              <th style={{ padding: 8 }}>班級</th>
-              <th style={{ padding: 8 }}>組別</th>
-              <th style={{ padding: 8 }}>人數</th>
-              <th style={{ padding: 8 }}>學習任務1 完成度</th>
-              <th style={{ padding: 8 }}></th>
-              <th style={{ padding: 8 }}></th>
-            </tr>
-          </thead>
-          <tbody>
-            {groupsRes.rows.map((g) => {
-              const done = doneMap.get(`${g.class}-${g.group_no}`) || 0;
-              const allDone = done === STAGE1_KEYS.length;
-              return (
-                <tr key={`${g.class}-${g.group_no}`} style={{ borderBottom: "1px solid #eee2cc" }}>
-                  <td style={{ padding: 8 }}>{g.class}</td>
-                  <td style={{ padding: 8 }}>第 {g.group_no} 組</td>
-                  <td style={{ padding: 8 }}>{g.member_count}</td>
-                  <td style={{ padding: 8 }}>{done} / {STAGE1_KEYS.length}</td>
-                  <td style={{ padding: 8 }}>
-                    <Link href={`/teacher/group/${g.class}/${g.group_no}`}>查看內容</Link>
-                  </td>
-                  <td style={{ padding: 8 }}>
-                    {allDone ? (
-                      <a href={`/api/staff/export/group?cls=${g.class}&groupNo=${g.group_no}`}>匯出報告(Word)</a>
-                    ) : (
-                      <span style={{ color: "#bbb" }}>尚未完成</span>
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+      {Object.keys(byClass).sort().map((cls) => (
+        <div className="card-story" key={cls}>
+          <h3 className="story-title" style={{ fontSize: 18, marginTop: 0 }}>{cls} 班</h3>
+          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <thead>
+              <tr style={{ textAlign: "left", borderBottom: "2px solid var(--forest)" }}>
+                <th style={{ padding: 8 }}>組別</th>
+                <th style={{ padding: 8 }}>人數</th>
+                <th style={{ padding: 8 }}>學習任務1 完成度</th>
+                <th style={{ padding: 8 }}></th>
+                <th style={{ padding: 8 }}></th>
+              </tr>
+            </thead>
+            <tbody>
+              {byClass[cls].map((g) => {
+                const done = doneMap.get(`${g.class}-${g.group_no}`) || 0;
+                const allDone = done === STAGE1_KEYS.length;
+                return (
+                  <tr key={`${g.class}-${g.group_no}`} style={{ borderBottom: "1px solid #eee2cc" }}>
+                    <td style={{ padding: 8 }}>第 {g.group_no} 組</td>
+                    <td style={{ padding: 8 }}>{g.member_count}</td>
+                    <td style={{ padding: 8 }}>{done} / {STAGE1_KEYS.length}</td>
+                    <td style={{ padding: 8 }}>
+                      <Link href={`/teacher/group/${g.class}/${g.group_no}`}>查看組別討論過程</Link>
+                    </td>
+                    <td style={{ padding: 8 }}>
+                      {allDone ? (
+                        <a href={`/api/staff/export/group?cls=${g.class}&groupNo=${g.group_no}`}>匯出報告(Word)</a>
+                      ) : (
+                        <span style={{ color: "#bbb" }}>尚未完成</span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      ))}
     </main>
   );
 }
