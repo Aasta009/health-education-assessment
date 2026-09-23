@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ensureReady, getPool, getUnlockedLevel } from "@/lib/db";
 import { readSession } from "@/lib/session";
-import { STAGE1_KEYS } from "@/lib/fields";
+import { ALL_KEYS } from "@/lib/fields";
 import GateControl from "./GateControl";
 
 export const dynamic = "force-dynamic";
@@ -24,7 +24,7 @@ export default async function TeacherDashboard() {
     `SELECT class, group_no, COUNT(DISTINCT field_key) as done
      FROM group_finals WHERE field_key = ANY($1)
      GROUP BY class, group_no`,
-    [STAGE1_KEYS]
+    [ALL_KEYS]
   );
   const doneMap = new Map(finalsRes.rows.map((r) => [`${r.class}-${r.group_no}`, Number(r.done)]));
 
@@ -67,7 +67,7 @@ export default async function TeacherDashboard() {
               <tr style={{ textAlign: "left", borderBottom: "2px solid var(--forest)" }}>
                 <th style={{ padding: 8 }}>組別</th>
                 <th style={{ padding: 8 }}>人數</th>
-                <th style={{ padding: 8 }}>學習任務1 完成度</th>
+                <th style={{ padding: 8 }}>整體完成度</th>
                 <th style={{ padding: 8 }}></th>
                 <th style={{ padding: 8 }}></th>
               </tr>
@@ -75,12 +75,12 @@ export default async function TeacherDashboard() {
             <tbody>
               {byClass[cls].map((g) => {
                 const done = doneMap.get(`${g.class}-${g.group_no}`) || 0;
-                const allDone = done === STAGE1_KEYS.length;
+                const allDone = done === ALL_KEYS.length;
                 return (
                   <tr key={`${g.class}-${g.group_no}`} style={{ borderBottom: "1px solid #eee2cc" }}>
                     <td style={{ padding: 8 }}>第 {g.group_no} 組</td>
                     <td style={{ padding: 8 }}>{g.member_count}</td>
-                    <td style={{ padding: 8 }}>{done} / {STAGE1_KEYS.length}</td>
+                    <td style={{ padding: 8 }}>{done} / {ALL_KEYS.length}</td>
                     <td style={{ padding: 8 }}>
                       <Link href={`/teacher/group/${g.class}/${g.group_no}`}>查看組別討論過程</Link>
                     </td>

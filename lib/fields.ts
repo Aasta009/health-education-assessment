@@ -68,24 +68,24 @@ export const FIELDS: FieldConfig[] = [
   { key: "result_teacher", stage: 2, group: "學習者評估結果",
     label: "教學者的評估",
     prompt: "組員身為未來的衛教者，自我評估的個人特質、教學風格、專業能力等。" },
-  { key: "final_topic", stage: 2, group: "確立主題",
+  { key: "final_topic", stage: 2, group: "確立主題與收尾",
     label: "確立衛生教育主題（並說明動機）",
     prompt: "根據評估結果，最終確定的主題是什麼？為什麼？" },
-  { key: "final_roles", stage: 2, group: "工作分配",
+  { key: "final_roles", stage: 2, group: "確立主題與收尾",
     label: "工作分配（最終版）",
     prompt: "" },
-  { key: "final_refs", stage: 2, group: "參考資料",
+  { key: "final_refs", stage: 2, group: "確立主題與收尾",
     label: "參考資料",
     prompt: "這份報告引用了哪些資料來源？" },
 ];
 
 export const STAGE1_KEYS = FIELDS.filter(f => f.stage === 1).map(f => f.key);
 export const STAGE2_KEYS = FIELDS.filter(f => f.stage === 2).map(f => f.key);
+export const ALL_KEYS = FIELDS.map(f => f.key);
 
 export function getField(key: string): FieldConfig | undefined {
   return FIELDS.find(f => f.key === key);
 }
-
 
 // Story-chapter dressing for the student journey map. Purely presentational —
 // does not affect the underlying field keys, data, or validation logic.
@@ -114,9 +114,21 @@ export const GROUP_STORY: Record<string, { chapter: string; title: string; blurb
     blurb: "修不好的東西，就讓它做別的事。把想法整理成一個實際可以帶去現場的活動流程。",
     icon: "house",
   },
+  "學習者評估結果": {
+    chapter: "第五關",
+    title: "迷路的人",
+    blurb: "場域探查回來了，把一路上的發現寫成結果。就像撐傘的兩個人各淋濕了一半——把大家看到的拼在一起，才是完整的樣子。",
+    icon: "girl",
+  },
+  "確立主題與收尾": {
+    chapter: "第六關",
+    title: "世界盡頭的樹",
+    blurb: "所有片段都到齊了：主題、工作分配、參考資料。讓它們在這裡長成一棵完整的樹。",
+    icon: "tree",
+  },
 };
 
-// Level gating: which numbered "chapter" each stage-1 field group belongs to.
+// Level gating: which numbered "chapter" each field group belongs to.
 // A class only sees/can-edit fields up to its current unlocked level (see
 // stage_gate table in lib/db.ts), controlled by the TA.
 export const LEVEL_BY_GROUP: Record<string, number> = {
@@ -124,8 +136,10 @@ export const LEVEL_BY_GROUP: Record<string, number> = {
   "學習者評估內容規劃": 2,
   "訪談綱要": 3,
   "學習者評估活動規劃書": 4,
+  "學習者評估結果": 5,
+  "確立主題與收尾": 6,
 };
-export const MAX_LEVEL = 4;
+export const MAX_LEVEL = 6;
 
 export function levelForField(key: string): number {
   const f = getField(key);

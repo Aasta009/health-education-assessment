@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-const CHAPTER_NAMES = ["", "第一關 下雨的草原", "第二關 不會走路的森林", "第三關 會忘記事情的河", "第四關 沒有門的房子"];
+const CHAPTER_NAMES = ["", "第一關 下雨的草原", "第二關 不會走路的森林", "第三關 會忘記事情的河", "第四關 沒有門的房子", "第五關 迷路的人", "第六關 世界盡頭的樹"];
 
 export default function GateControl({ initial }: { initial: Record<string, number> }) {
   const [levels, setLevels] = useState(initial);
@@ -29,7 +29,7 @@ export default function GateControl({ initial }: { initial: Record<string, numbe
         <div key={cls} style={{ marginBottom: 14 }}>
           <b>{cls} 班</b>　目前開放到：{CHAPTER_NAMES[levels[cls] || 1]}
           <div style={{ display: "flex", gap: 8, marginTop: 6, flexWrap: "wrap" }}>
-            {[1, 2, 3, 4].map((lv) => (
+            {[1, 2, 3, 4, 5, 6].map((lv) => (
               <button
                 key={lv}
                 className={levels[cls] === lv ? "btn-story" : "btn-story outline"}

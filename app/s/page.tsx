@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ensureReady, getPool } from "@/lib/db";
 import { readSession } from "@/lib/session";
-import { FIELDS, STAGE1_KEYS, GROUP_STORY, LEVEL_BY_GROUP } from "@/lib/fields";
+import { FIELDS, ALL_KEYS, GROUP_STORY, LEVEL_BY_GROUP } from "@/lib/fields";
 import { getUnlockedLevel } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
@@ -12,6 +12,8 @@ const ICON_FILES: Record<string, string> = {
   seed: "icon-seed.png",
   river: "icon-river.png",
   house: "icon-house.png",
+  girl: "icon-girl.png",
+  tree: "icon-tree.png",
 };
 
 function ChapterIcon({ name }: { name: string }) {
@@ -48,9 +50,8 @@ export default async function StudentDashboard() {
   const doneKeys = new Set(finals.rows.map((r) => r.field_key));
   const unlockedLevel = await getUnlockedLevel(session.cls);
 
-  const stage1Fields = FIELDS.filter((f) => f.stage === 1);
-  const groups = Array.from(new Set(stage1Fields.map((f) => f.group)));
-  const allStage1Done = STAGE1_KEYS.every((k) => doneKeys.has(k));
+  const groups = Array.from(new Set(FIELDS.map((f) => f.group)));
+  const allDone = ALL_KEYS.every((k) => doneKeys.has(k));
 
   return (
     <main className="container" style={{ paddingTop: 36 }}>
@@ -67,7 +68,7 @@ export default async function StudentDashboard() {
 
         {groups.map((g) => {
           const story = GROUP_STORY[g];
-          const groupFields = stage1Fields.filter((f) => f.group === g);
+          const groupFields = FIELDS.filter((f) => f.group === g);
           const groupDone = groupFields.every((f) => doneKeys.has(f.key));
           const chapterLevel = LEVEL_BY_GROUP[g] ?? 99;
           const isLocked = chapterLevel > unlockedLevel;
@@ -108,13 +109,17 @@ export default async function StudentDashboard() {
 
       <div className="card-story" style={{ textAlign: "center" }}>
         <h4 className="story-title" style={{ marginTop: 0, fontSize: 17 }}>世界盡頭的樹</h4>
-        {allStage1Done ? (
+        {allDone ? (
           <>
             <p style={{ color: "var(--ink-soft)", fontSize: 14 }}>所有片段都到齊了，可以讓它們長成一份完整的報告。</p>
-            <a href="/api/export/stage1"><button className="btn-story">下載學習任務1初版 Word 檔</button></a>
+            <a href="/api/export/final"><button className="btn-story">下載完整學習者評估報告（Word）</button></a>
+            <p style={{ marginTop: 14 }}><Link href="/s/reflection">→ 前往填寫個人反思心得</Link></p>
           </>
         ) : (
-          <p style={{ color: "#8a5a1f" }}>還有幾段路沒走完——完成上面所有「組內定稿」，樹才會長出來。</p>
+          <>
+            <p style={{ color: "#8a5a1f" }}>還有幾段路沒走完——完成上面所有「組內定稿」，樹才會長出來。</p>
+            <p style={{ marginTop: 14 }}><Link href="/s/reflection">→ 前往填寫個人反思心得</Link></p>
+          </>
         )}
       </div>
     </main>

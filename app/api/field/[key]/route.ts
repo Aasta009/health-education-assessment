@@ -13,7 +13,7 @@ async function checkAccess(session: any, key: string) {
   if (session.groupNo == null) {
     return { error: NextResponse.json({ error: "尚未分組，請等待老師指派組別" }, { status: 409 }) };
   }
-  if (field.stage === 1) {
+  if (field.stage === 1 || field.stage === 2) {
     const unlocked = await getUnlockedLevel(session.cls);
     if (levelForField(key) > unlocked) {
       return { error: NextResponse.json({ error: "這一段路還沒開放，請等老師／助教開啟下一關" }, { status: 403 }) };
