@@ -41,7 +41,12 @@ export default async function TeacherDashboard() {
   }
 
   return (
-    <main className="container" style={{ paddingTop: 40 }}>
+    <main style={{ minHeight: "100vh" }}>
+      <div style={{ width: "100%", aspectRatio: "1600 / 900", maxHeight: 260, overflow: "hidden" }}>
+        <img src="/images/staff-desk-map.jpg" alt="引路人的書桌與地圖"
+          style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+      </div>
+      <div className="container" style={{ paddingTop: 24 }}>
       <h2 className="story-title" style={{ fontSize: 20 }}>
         引路人視角（{session.kind === "ta" ? "助教" : "教師"}／唯讀）
       </h2>
@@ -93,6 +98,7 @@ export default async function TeacherDashboard() {
           </table>
         </div>
       ))}
+      </div>
     </main>
   );
 }
