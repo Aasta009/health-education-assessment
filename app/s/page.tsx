@@ -83,7 +83,7 @@ export default async function StudentDashboard() {
               <div className="card-story" style={{ marginLeft: 14 }}>
                 {story && (
                   <p style={{ margin: "0 0 4px", fontSize: 12.5, color: "var(--terracotta)", fontFamily: "'Noto Serif TC', serif", fontWeight: 700 }}>
-                    {story.chapter}
+                    {story.chapter}　・　建議 {story.minutes} 分鐘
                   </p>
                 )}
                 <h4 className="story-title" style={{ margin: "0 0 6px", fontSize: 17 }}>{story?.title || g}</h4>
@@ -107,20 +107,26 @@ export default async function StudentDashboard() {
         })}
       </div>
 
-      <div className="card-story" style={{ textAlign: "center" }}>
-        <h4 className="story-title" style={{ marginTop: 0, fontSize: 17 }}>世界盡頭的樹</h4>
-        {allDone ? (
-          <>
-            <p style={{ color: "var(--ink-soft)", fontSize: 14 }}>所有片段都到齊了，可以讓它們長成一份完整的報告。</p>
-            <a href="/api/export/final"><button className="btn-story">下載完整學習者評估報告（Word）</button></a>
-            <p style={{ marginTop: 14 }}><Link href="/s/reflection">→ 前往填寫個人反思心得</Link></p>
-          </>
-        ) : (
-          <>
-            <p style={{ color: "#8a5a1f" }}>還有幾段路沒走完——完成上面所有「組內定稿」，樹才會長出來。</p>
-            <p style={{ marginTop: 14 }}><Link href="/s/reflection">→ 前往填寫個人反思心得</Link></p>
-          </>
+      <div className="card-story" style={{ textAlign: "center", padding: 0, overflow: "hidden" }}>
+        {allDone && (
+          <img src="/images/finale-scene.jpg" alt="世界盡頭的大樹"
+            style={{ width: "100%", display: "block" }} />
         )}
+        <div style={{ padding: "20px 24px" }}>
+          <h4 className="story-title" style={{ marginTop: 0, fontSize: 17 }}>世界盡頭的樹</h4>
+          {allDone ? (
+            <>
+              <p style={{ color: "var(--ink-soft)", fontSize: 14 }}>所有片段都到齊了，可以讓它們長成一份完整的報告。</p>
+              <a href="/api/export/final"><button className="btn-story">下載完整學習者評估報告（Word）</button></a>
+              <p style={{ marginTop: 14 }}><Link href="/s/reflection">→ 前往填寫個人反思心得</Link></p>
+            </>
+          ) : (
+            <>
+              <p style={{ color: "#8a5a1f" }}>還有幾段路沒走完——完成上面所有「組內定稿」，樹才會長出來。</p>
+              <p style={{ marginTop: 14 }}><Link href="/s/reflection">→ 前往填寫個人反思心得</Link></p>
+            </>
+          )}
+        </div>
       </div>
     </main>
   );

@@ -1,5 +1,6 @@
 import { Pool } from "pg";
 import { ROSTER } from "./roster-seed";
+import { GROUP_ASSIGNMENTS_A, GROUP_ASSIGNMENTS_B } from "./group-assignments";
 
 let pool: Pool | null = null;
 let readyPromise: Promise<void> | null = null;
@@ -133,6 +134,16 @@ async function ensureSchemaAndSeed() {
                    group_no = EXCLUDED.group_no, is_leader = EXCLUDED.is_leader,
                    is_hidden = EXCLUDED.is_hidden`
   );
+
+  // Apply any provided group assignments — idempotent, safe to re-run as
+  // more lists arrive (e.g. A班 later). Re-applying the same list just
+  // re-confirms the same group_no/is_leader each time.
+  for (const a of [...GROUP_ASSIGNMENTS_A, ...GROUP_ASSIGNMENTS_B]) {
+    await p.query(
+      `UPDATE students SET group_no = $2, is_leader = $3 WHERE student_id = $1`,
+      [a.id, a.groupNo, a.isLeader]
+    );
+  }
 
   // Every class starts with only chapter 1 unlocked; the TA opens the rest.
   for (const cls of ["A", "B"]) {
