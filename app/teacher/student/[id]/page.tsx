@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { ensureReady, getPool } from "@/lib/db";
 import { readSession } from "@/lib/session";
-import { FIELDS } from "@/lib/fields";
+import { FIELDS, ALL_KEYS } from "@/lib/fields";
 
 export const dynamic = "force-dynamic";
 
@@ -26,6 +26,11 @@ export default async function StudentProfile({ params }: { params: { id: string 
     [params.id]
   );
   const byKey = new Map(responses.rows.map((r) => [r.field_key, r]));
+  const answeredCount = Array.from(byKey.values()).filter((r) => r.content && r.content.trim()).length;
+  const lastActivity = responses.rows.reduce<Date | null>((max, r) => {
+    const t = new Date(r.updated_at);
+    return !max || t > max ? t : max;
+  }, null);
 
   return (
     <main className="container" style={{ paddingTop: 32 }}>
@@ -34,6 +39,12 @@ export default async function StudentProfile({ params }: { params: { id: string 
       <p style={{ color: "var(--ink-soft)" }}>
         學號 {student.student_id}　{student.class} 班　第 {student.group_no} 組{student.is_leader ? "（組長）" : ""}
       </p>
+      <div className="card-story">
+        <p style={{ margin: "0 0 4px" }}>個人已填寫：{answeredCount} / {ALL_KEYS.length}</p>
+        <p style={{ margin: 0, fontSize: 13.5, color: "var(--ink-soft)" }}>
+          最後活動時間：{lastActivity ? lastActivity.toLocaleString("zh-TW") : "尚無紀錄"}
+        </p>
+      </div>
       {FIELDS.map((f) => {
         const r = byKey.get(f.key);
         return (
