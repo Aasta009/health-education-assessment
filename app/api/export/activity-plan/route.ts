@@ -4,6 +4,7 @@ import { ensureReady } from "@/lib/db";
 import { readSession } from "@/lib/session";
 import { FIELDS } from "@/lib/fields";
 import { buildDocxForKeys } from "@/lib/report";
+import { contentDispositionHeader } from "@/lib/format";
 
 const KEYS = FIELDS.filter((f) => f.group === "活動規劃書").map((f) => f.key);
 
@@ -20,7 +21,7 @@ export async function GET(_req: NextRequest) {
   return new NextResponse(buffer, {
     headers: {
       "Content-Type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      "Content-Disposition": `attachment; filename="活動規劃書_初版.docx"`,
+      "Content-Disposition": contentDispositionHeader("活動規劃書_初版.docx", "activity-plan.docx"),
     },
   });
 }
