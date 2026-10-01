@@ -6,6 +6,7 @@ export type FieldConfig = {
   prompt: string;
   multiline?: boolean;
   highlight?: boolean; // render label in bold red — used for scoring-critical fields
+  skipIndividual?: boolean; // skip the "我的想法" individual-draft step, go straight to group final
 };
 
 export const FIELDS: FieldConfig[] = [
@@ -46,8 +47,8 @@ export const FIELDS: FieldConfig[] = [
   // ---- 第四關：AI迭代結果（課後自行完成，使用 NotebookLM）----
   { key: "ai_result", stage: 1, group: "AI迭代結果",
     label: "AI迭代後最終結果",
-    prompt: "請把你們匯出的「組內討論結果」檔案放進 NotebookLM，依照提示詞請 AI 檢查評估規劃是否符合學習評估原則、有無需要修改之處，經過幾輪討論後，把最終版本貼在這裡。",
-    multiline: true },
+    prompt: "請把你們匯出的「組內討論結果」檔案放進 NotebookLM，依照提示詞請 AI 檢查評估規劃是否符合學習評估原則、有無需要修改之處，經過幾輪討論後，把最終版本貼在這裡（這是跟 AI 討論後的共同結果，不需要先各自填寫個人想法）。",
+    multiline: true, skipIndividual: true },
   { key: "ai_reason", stage: 1, group: "AI迭代結果",
     label: "修改理由（為何採納或不採納 AI 的建議）",
     prompt: "請說明你們根據 AI 的建議做了哪些修改、為什麼這樣修改（或為什麼不採納某些建議）。這一項是評分重點，請務必詳細說明理由，不是只貼結果。",
