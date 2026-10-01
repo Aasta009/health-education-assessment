@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 import { ensureReady, getPool } from "@/lib/db";
-import { encodeSession, sessionCookieName } from "@/lib/session";
+import { encodeSession, sessionCookieName, SESSION_COOKIE_OPTIONS } from "@/lib/session";
 
 const TA_CODE = process.env.TA_CODE || "A113120009";
 const TEACHER_CODE = process.env.TEACHER_CODE || "T115015";
@@ -19,17 +19,13 @@ export async function POST(req: NextRequest) {
   if (input === TA_CODE) {
     const session = { role: "staff" as const, kind: "ta" as const };
     const res = NextResponse.json({ ok: true, session });
-    res.cookies.set(sessionCookieName(), encodeSession(session), {
-      httpOnly: true, sameSite: "lax", path: "/", maxAge: 60 * 60 * 24 * 300,
-    });
+    res.cookies.set(sessionCookieName(), encodeSession(session), SESSION_COOKIE_OPTIONS);
     return res;
   }
   if (input === TEACHER_CODE) {
     const session = { role: "staff" as const, kind: "teacher" as const };
     const res = NextResponse.json({ ok: true, session });
-    res.cookies.set(sessionCookieName(), encodeSession(session), {
-      httpOnly: true, sameSite: "lax", path: "/", maxAge: 60 * 60 * 24 * 300,
-    });
+    res.cookies.set(sessionCookieName(), encodeSession(session), SESSION_COOKIE_OPTIONS);
     return res;
   }
 
@@ -51,11 +47,6 @@ export async function POST(req: NextRequest) {
     isLeader: s.is_leader,
   };
   const res = NextResponse.json({ ok: true, session });
-  res.cookies.set(sessionCookieName(), encodeSession(session), {
-    httpOnly: true,
-    sameSite: "lax",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 300,
-  });
+  res.cookies.set(sessionCookieName(), encodeSession(session), SESSION_COOKIE_OPTIONS);
   return res;
 }
