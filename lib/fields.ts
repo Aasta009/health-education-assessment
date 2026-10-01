@@ -13,8 +13,7 @@ export const FIELDS: FieldConfig[] = [
   // ---- 第一關：主題方向（僅需確認年級，1分鐘）----
   { key: "topic", stage: 1, group: "主題方向",
     label: "本組負責的年級與主題",
-    prompt: "請確認你們這組負責哪個年級，課堂提供兩個年級主題：\n・三年級｜認識失智症的症狀與預防失智症\n・四年級｜失智症患者的相處與友善環境營造\n只需確認並寫下你們負責的年級與主題即可，不需要額外發想新方向。",
-    multiline: true },
+    prompt: "請確認你們這組負責哪個年級，點選即可，不需要個人填寫或組內定稿。" },
 
   // ---- 第二關：學習者評估內容規劃 ----
   { key: "need", stage: 1, group: "學習者評估內容規劃",
@@ -44,7 +43,7 @@ export const FIELDS: FieldConfig[] = [
     prompt: "由負責「護理師」這一欄的 4 位組員填寫。想請教校護或社區護理師哪些問題？建議涵蓋：\n・國小目前失智症衛教現況與可運用的衛教資源\n・不同年級的衛教安排建議\n・與學童溝通失智症相關議題時的注意事項",
     multiline: true },
 
-  // ---- 第四關：AI迭代結果（課後自行完成，使用 NotebookLM）----
+  // ---- 第四關：AI迭代結果（使用 NotebookLM，20分鐘）----
   { key: "ai_result", stage: 1, group: "AI迭代結果",
     label: "AI迭代後最終結果",
     prompt: "請把你們匯出的「組內討論結果」檔案放進 NotebookLM，依照提示詞請 AI 檢查評估規劃是否符合學習評估原則、有無需要修改之處，經過幾輪討論後，把最終版本貼在這裡（這是跟 AI 討論後的共同結果，不需要先各自填寫個人想法）。",
@@ -83,23 +82,23 @@ export function getField(key: string): FieldConfig | undefined {
 // Which groups are shown as one consolidated multi-column page instead of
 // linking to individual /s/field/[key] pages.
 export const CONSOLIDATED_GROUPS: Record<string, string> = {
+  "主題方向": "/s", // checkbox-only selection, lives inline on the journey map
   "訪談綱要": "/s/interview",
   "AI迭代結果": "/s/ai-iteration",
   "活動規劃書": "/s/activity-plan",
 };
 
 // Journey map chapter labels — plain, no story framing. `minutes` is the
-// suggested classroom time (per TA pacing reference); null means it's done
-// outside class (homework), not timed in class.
+// suggested classroom time (per TA pacing reference).
 export const GROUP_STORY: Record<string, { chapter: string; minutes: number | null }> = {
   "主題方向": { chapter: "第一關", minutes: 1 },
   "學習者評估內容規劃": { chapter: "第二關", minutes: 12 },
   "訪談綱要": { chapter: "第三關", minutes: 17 },
-  "AI迭代結果": { chapter: "第四關", minutes: null },
+  "AI迭代結果": { chapter: "第四關", minutes: 20 },
   "活動規劃書": { chapter: "第五關", minutes: 20 },
 };
 
-export const SESSION_CHAPTERS_MINUTES = 50; // 第一、二、三、五關（第四關為課後自行完成）
+export const SESSION_CHAPTERS_MINUTES = 70; // 第一～五關總計
 
 // Level gating: which numbered "chapter" each field group belongs to.
 // A class only sees/can-edit fields up to its current unlocked level (see

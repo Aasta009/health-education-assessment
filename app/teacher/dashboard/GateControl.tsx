@@ -2,8 +2,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-const CHAPTER_NAMES = ["", "第一關　主題方向", "第二關　學習者評估內容規劃", "第三關　訪談綱要", "第四關　AI迭代結果（課後）", "第五關　活動規劃書"];
-const CHAPTER_MINUTES: (number | null)[] = [0, 1, 12, 17, null, 20];
+const CHAPTER_NAMES = ["", "第一關　主題方向", "第二關　學習者評估內容規劃", "第三關　訪談綱要", "第四關　AI迭代結果", "第五關　活動規劃書"];
+const CHAPTER_MINUTES: (number | null)[] = [0, 1, 12, 17, 20, 20];
 
 export default function GateControl({ initial }: { initial: Record<string, number> }) {
   const [levels, setLevels] = useState(initial);
@@ -28,7 +28,7 @@ export default function GateControl({ initial }: { initial: Record<string, numbe
       <p style={{ color: "var(--ink-soft)", fontSize: 13.5 }}>學生只能看到並填寫已開放的關卡，避免自行往前跳。</p>
 
       <div style={{ background: "#f3ecdd", borderRadius: 8, padding: "10px 14px", marginBottom: 14, fontSize: 13 }}>
-        <b>建議節奏參考</b>（課堂 50 分鐘：第一關1分／第二關12分／第三關17分／第五關20分；第四關為課後自行以 NotebookLM 完成，不計入課堂時間）
+        <b>建議節奏參考</b>（共 70 分鐘：第一關1分／第二關12分／第三關17分／第四關20分（含課後以 NotebookLM 迭代）／第五關20分）
       </div>
 
       {["A", "B"].map((cls) => (
@@ -43,7 +43,7 @@ export default function GateControl({ initial }: { initial: Record<string, numbe
                 disabled={saving === cls}
                 onClick={() => setLevel(cls, lv)}
               >
-                開放到第{lv}關{CHAPTER_MINUTES[lv] != null ? `（${CHAPTER_MINUTES[lv]}分）` : "（課後）"}
+                開放到第{lv}關（{CHAPTER_MINUTES[lv]}分）
               </button>
             ))}
           </div>

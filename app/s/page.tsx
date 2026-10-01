@@ -4,6 +4,7 @@ import { ensureReady, getPool, getUnlockedLevel } from "@/lib/db";
 import { readSession } from "@/lib/session";
 import { FIELDS, ALL_KEYS, GROUP_STORY, LEVEL_BY_GROUP, CONSOLIDATED_GROUPS, ORDERED_GROUPS } from "@/lib/fields";
 import ExportDiscussionButton from "./_shared/ExportDiscussionButton";
+import TopicSelect from "./_shared/TopicSelect";
 
 export const dynamic = "force-dynamic";
 
@@ -87,11 +88,13 @@ export default async function StudentDashboard() {
                 </div>
                 <div className="card-story" style={{ marginLeft: 14 }}>
                   <p style={{ margin: "0 0 6px", fontSize: 12.5, color: "var(--terracotta)", fontWeight: 700 }}>
-                    {story?.chapter}　{story?.minutes != null ? `・建議 ${story.minutes} 分鐘` : "・課後自行完成"}
+                    {story?.chapter}　・建議 {story?.minutes} 分鐘
                   </p>
                   <h4 className="story-title" style={{ margin: "0 0 10px", fontSize: 17 }}>{g}</h4>
                   {isLocked ? (
                     <p style={{ fontSize: 13.5, color: "#8a5a1f", margin: 0 }}>這一關還沒開放，請等老師／助教開啟。</p>
+                  ) : g === "主題方向" ? (
+                    <TopicSelect />
                   ) : consolidatedRoute ? (
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                       <Link href={consolidatedRoute}>前往作答</Link>
