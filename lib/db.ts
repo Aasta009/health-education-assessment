@@ -93,13 +93,6 @@ CREATE TABLE IF NOT EXISTS finalize_log (
   finalized_by_name TEXT,
   created_at TIMESTAMPTZ DEFAULT now()
 );
-
--- Controls how many stage-1 "chapters" (1-4) each class may currently see
--- and edit. Only the TA may change this; students never advance themselves.
-CREATE TABLE IF NOT EXISTS stage_gate (
-  class TEXT PRIMARY KEY,
-  unlocked_level INT NOT NULL DEFAULT 1
-);
 `;
 
 async function ensureSchemaAndSeed() {
@@ -136,29 +129,6 @@ async function ensureSchemaAndSeed() {
     );
   }
 
-  // Every class starts with only chapter 1 unlocked; the TA opens the rest.
-  for (const cls of ["A", "B"]) {
-    await p.query(
-      `INSERT INTO stage_gate (class, unlocked_level) VALUES ($1, 1)
-       ON CONFLICT (class) DO NOTHING`,
-      [cls]
-    );
-  }
-}
-
-export async function getUnlockedLevel(cls: string): Promise<number> {
-  const pool = getPool();
-  const { rows } = await pool.query(`SELECT unlocked_level FROM stage_gate WHERE class = $1`, [cls]);
-  return rows[0]?.unlocked_level ?? 1;
-}
-
-export async function setUnlockedLevel(cls: string, level: number): Promise<void> {
-  const pool = getPool();
-  await pool.query(
-    `INSERT INTO stage_gate (class, unlocked_level) VALUES ($1, $2)
-     ON CONFLICT (class) DO UPDATE SET unlocked_level = EXCLUDED.unlocked_level`,
-    [cls, level]
-  );
 }
 
 // Call this at the top of every API route before touching the DB.

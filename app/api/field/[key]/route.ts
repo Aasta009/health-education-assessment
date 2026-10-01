@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
-import { ensureReady, getPool, getUnlockedLevel } from "@/lib/db";
+import { ensureReady, getPool } from "@/lib/db";
 import { readSession } from "@/lib/session";
-import { getField, levelForField } from "@/lib/fields";
+import { getField } from "@/lib/fields";
 
 async function checkAccess(session: any, key: string) {
   if (!session || session.role !== "student") {
@@ -12,10 +12,6 @@ async function checkAccess(session: any, key: string) {
   if (!field) return { error: NextResponse.json({ error: "找不到此關卡" }, { status: 404 }) };
   if (session.groupNo == null) {
     return { error: NextResponse.json({ error: "尚未分組，請等待老師指派組別" }, { status: 409 }) };
-  }
-  const unlocked = await getUnlockedLevel(session.cls);
-  if (levelForField(key) > unlocked) {
-    return { error: NextResponse.json({ error: "這一段路還沒開放，請等老師／助教開啟下一關" }, { status: 403 }) };
   }
   return { field };
 }

@@ -100,24 +100,6 @@ export const GROUP_STORY: Record<string, { chapter: string; minutes: number | nu
 
 export const SESSION_CHAPTERS_MINUTES = 70; // 第一～五關總計
 
-// Level gating: which numbered "chapter" each field group belongs to.
-// A class only sees/can-edit fields up to its current unlocked level (see
-// stage_gate table in lib/db.ts), controlled by the TA.
-export const LEVEL_BY_GROUP: Record<string, number> = {
-  "主題方向": 1,
-  "學習者評估內容規劃": 2,
-  "訪談綱要": 3,
-  "AI迭代結果": 4,
-  "活動規劃書": 5,
-};
-export const MAX_LEVEL = 5;
-
-export function levelForField(key: string): number {
-  const f = getField(key);
-  if (!f) return 99;
-  return LEVEL_BY_GROUP[f.group] ?? 99;
-}
-
 // Ordered list of groups, used to compute "what's the next thing to do".
 export const ORDERED_GROUPS = Array.from(new Set(FIELDS.map((f) => f.group)));
 

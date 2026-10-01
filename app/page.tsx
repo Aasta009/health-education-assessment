@@ -84,14 +84,11 @@ export default function Home() {
                 學習者評估
               </h1>
               <p style={{ color: "var(--ink-soft)", fontSize: 14.5, lineHeight: 1.8, margin: "0 0 22px" }}>
-                鐘門打開，掉出一把破傘。<br />
-                「帶著它，去你不知道的地方。」<br />
-                這趟旅程會經過草原、森林、河流與小屋——<br />
-                每一站，你都會留下一點什麼，也會帶走一點什麼。
+                健康促進與衛生教育課程｜學習者評估協作平台
               </p>
               <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
-                <Link href="/login"><button className="btn-story">拿起傘，出發　</button></Link>
-                <Link href="/staff"><button className="btn-story outline">我是引路人（教師／助教）</button></Link>
+                <Link href="/login"><button className="btn-story">學生登入</button></Link>
+                <Link href="/staff"><button className="btn-story outline">教師／助教登入</button></Link>
               </div>
             </>
           )}

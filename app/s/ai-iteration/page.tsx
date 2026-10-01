@@ -34,7 +34,7 @@ export default function AIIterationPage() {
       <h2 className="story-title" style={{ fontSize: 21 }}>第四關　AI迭代結果</h2>
       <div className="card-story" style={{ background: "#f3ecdd" }}>
         <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.8 }}>
-          這一關請在課後完成：<br />
+          請依序完成：<br />
           1. 到「關卡總覽」頁面下載「組內討論結果」檔案<br />
           2. 開啟 NotebookLM，把這個檔案加入來源<br />
           3. 使用提示詞：「依照『組內討論結果』檔案中的評估設計，請幫我檢查是否符合學習評估規劃原則，有無須修改處。執行前，若有問題，請先問我。」<br />

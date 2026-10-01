@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ensureReady, getPool, getUnlockedLevel } from "@/lib/db";
+import { ensureReady, getPool } from "@/lib/db";
 import { readSession } from "@/lib/session";
-import { FIELDS, ALL_KEYS, GROUP_STORY, LEVEL_BY_GROUP, CONSOLIDATED_GROUPS, ORDERED_GROUPS } from "@/lib/fields";
+import { FIELDS, ALL_KEYS, GROUP_STORY, CONSOLIDATED_GROUPS, ORDERED_GROUPS } from "@/lib/fields";
 import ExportDiscussionButton from "./_shared/ExportDiscussionButton";
 import TopicSelect from "./_shared/TopicSelect";
 
@@ -41,7 +41,6 @@ export default async function StudentDashboard() {
     [session.cls, session.groupNo]
   );
   const doneKeys = new Set(finals.rows.map((r) => r.field_key));
-  const unlockedLevel = await getUnlockedLevel(session.cls);
   const allDone = ALL_KEYS.every((k) => doneKeys.has(k));
 
   const discussionKeys = FIELDS.filter((f) => ["主題方向", "學習者評估內容規劃", "訪談綱要"].includes(f.group)).map((f) => f.key);
@@ -73,13 +72,11 @@ export default async function StudentDashboard() {
           const story = GROUP_STORY[g];
           const groupFields = FIELDS.filter((f) => f.group === g);
           const groupDone = groupFields.every((f) => doneKeys.has(f.key));
-          const chapterLevel = LEVEL_BY_GROUP[g] ?? 99;
-          const isLocked = chapterLevel > unlockedLevel;
           const consolidatedRoute = CONSOLIDATED_GROUPS[g];
 
           return (
             <div key={g}>
-              <div style={{ position: "relative", marginBottom: 26, opacity: isLocked ? 0.55 : 1 }}>
+              <div style={{ position: "relative", marginBottom: 26 }}>
                 <div style={{ position: "absolute", left: -28, top: -2,
                   width: 38, height: 38, borderRadius: "50%", overflow: "hidden",
                   background: groupDone ? "#D6A756" : "#FCF8ED",
@@ -91,9 +88,7 @@ export default async function StudentDashboard() {
                     {story?.chapter}　・建議 {story?.minutes} 分鐘
                   </p>
                   <h4 className="story-title" style={{ margin: "0 0 10px", fontSize: 17 }}>{g}</h4>
-                  {isLocked ? (
-                    <p style={{ fontSize: 13.5, color: "#8a5a1f", margin: 0 }}>這一關還沒開放，請等老師／助教開啟。</p>
-                  ) : g === "主題方向" ? (
+                  {g === "主題方向" ? (
                     <TopicSelect />
                   ) : consolidatedRoute ? (
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>

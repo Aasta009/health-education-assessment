@@ -1,18 +1,18 @@
 import { redirect } from "next/navigation";
-import { ensureReady, getPool, getUnlockedLevel } from "@/lib/db";
+import { ensureReady, getPool } from "@/lib/db";
 import { readSession } from "@/lib/session";
 import Link from "next/link";
 import { FIELDS, ALL_KEYS, getField } from "@/lib/fields";
-import { getClassDashboard, STALL_WARN_MINUTES, STALL_ALERT_MINUTES } from "@/lib/dashboard";
+import { getClassDashboard } from "@/lib/dashboard";
 import { formatTaipei } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
 const STATUS_DOT: Record<string, string> = {
-  done: "#3F5B44", ok: "#5FA05A", warn: "#D6A756", alert: "#B33", not_started: "#c9c1ae",
+  done: "#3F5B44", in_progress: "#D6A756", not_started: "#c9c1ae",
 };
 const STATUS_LABEL: Record<string, string> = {
-  done: "✓ 已完成", ok: "🟢 正常", warn: "🟡 停留", alert: "🔴 可能卡關", not_started: "尚未開始",
+  done: "✓ 已完成", in_progress: "進行中", not_started: "尚未開始",
 };
 
 export default async function TeacherGroupDetail({ params }: { params: { cls: string; groupNo: string } }) {
@@ -80,7 +80,6 @@ export default async function TeacherGroupDetail({ params }: { params: { cls: st
           </div>
           <p style={{ margin: 0, fontSize: 13.5, color: "var(--ink-soft)" }}>
             {summary.currentChapter ? `目前關卡：${summary.currentChapter}` : "全部完成"}
-            {summary.stallMinutes != null && summary.status !== "done" && `　｜　最後活動距今 ${summary.stallMinutes} 分鐘`}
           </p>
           {summary.status === "done" && (
             <a href={`/api/staff/export/group?cls=${cls}&groupNo=${groupNo}`}>
@@ -105,8 +104,7 @@ export default async function TeacherGroupDetail({ params }: { params: { cls: st
             <tbody>
               {memberStats.rows.map((m) => {
                 const answered = Number(m.answered);
-                const mins = m.last_at ? Math.floor((Date.now() - new Date(m.last_at).getTime()) / 60000) : null;
-                const st = answered === ALL_KEYS.length ? "done" : mins == null ? "not_started" : mins >= STALL_ALERT_MINUTES ? "alert" : mins >= STALL_WARN_MINUTES ? "warn" : "ok";
+                const st = answered === ALL_KEYS.length ? "done" : answered > 0 ? "in_progress" : "not_started";
                 return (
                   <tr key={m.student_id} style={{ borderBottom: "1px solid #eee2cc" }}>
                     <td style={{ padding: 6 }}>
