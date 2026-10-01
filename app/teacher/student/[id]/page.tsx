@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { ensureReady, getPool } from "@/lib/db";
 import { readSession } from "@/lib/session";
 import { FIELDS, ALL_KEYS } from "@/lib/fields";
+import { formatTaipei } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -42,7 +43,7 @@ export default async function StudentProfile({ params }: { params: { id: string 
       <div className="card-story">
         <p style={{ margin: "0 0 4px" }}>個人已填寫：{answeredCount} / {ALL_KEYS.length}</p>
         <p style={{ margin: 0, fontSize: 13.5, color: "var(--ink-soft)" }}>
-          最後活動時間：{lastActivity ? lastActivity.toLocaleString("zh-TW") : "尚無紀錄"}
+          最後活動時間：{lastActivity ? formatTaipei(lastActivity) : "尚無紀錄"}
         </p>
       </div>
       {FIELDS.map((f) => {

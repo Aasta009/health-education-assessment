@@ -78,7 +78,7 @@ export default async function StudentDashboard() {
             <div key={g}>
               {idx === 4 && (
                 <div className="card-story" style={{ marginLeft: 14, marginBottom: 26, background: stage1AllDone ? "#FCF8ED" : "#f3ecdd" }}>
-                  <h4 className="story-title" style={{ marginTop: 0, fontSize: 15 }}>AI－學生迭代式推理歷程 I</h4>
+                  <h4 className="story-title" style={{ marginTop: 0, fontSize: 15 }}>AI－學生迭代式推理歷程 I　<span style={{ fontSize: 12, color: "var(--terracotta)" }}>建議 50 分鐘</span></h4>
                   {stage1AllDone ? (
                     <>
                       <p style={{ fontSize: 13, color: "var(--ink-soft)" }}>第一～四關都定稿了，把你們跟 NotebookLM 討論的過程記錄下來。</p>
@@ -121,7 +121,7 @@ export default async function StudentDashboard() {
             </div>
             {idx === groups.length - 1 && (
               <div className="card-story" style={{ marginLeft: 14, marginTop: 26, background: stage2AllDone ? "#FCF8ED" : "#f3ecdd" }}>
-                <h4 className="story-title" style={{ marginTop: 0, fontSize: 15 }}>AI－學生迭代式推理歷程 II</h4>
+                <h4 className="story-title" style={{ marginTop: 0, fontSize: 15 }}>AI－學生迭代式推理歷程 II　<span style={{ fontSize: 12, color: "var(--terracotta)" }}>建議 50 分鐘</span></h4>
                 {stage2AllDone ? (
                   <>
                     <p style={{ fontSize: 13, color: "var(--ink-soft)" }}>第五、六關都定稿了，把整合討論的過程記錄下來，形成最終報告要採用的內容。</p>

@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { formatTaipei } from "@/lib/format";
 
 type Round = { round_no: number; prompt: string; ai_response: string; judgment: string; judgment_reason: string; created_by_name: string; created_at: string };
 
@@ -109,6 +110,7 @@ export default function ChapterColumn({ chapterKey, compact }: { chapterKey: str
         <div key={r.round_no} style={{ borderLeft: `3px solid ${JUDGMENT_COLOR[r.judgment]}`, paddingLeft: 10, marginBottom: 10 }}>
           <p style={{ fontSize: 11.5, fontWeight: 700, margin: "0 0 2px" }}>
             Round {r.round_no} {data.finalRound === r.round_no && "★ FINAL"}
+            <span style={{ fontWeight: 400, color: "var(--ink-soft)", marginLeft: 8 }}>{formatTaipei(r.created_at)}</span>
           </p>
           <p style={{ fontSize: 12, margin: "2px 0" }}><b>我的提問：</b>{r.prompt}</p>
           <p style={{ fontSize: 12, margin: "2px 0" }}><b>NotebookLM 回覆：</b>{r.ai_response}</p>

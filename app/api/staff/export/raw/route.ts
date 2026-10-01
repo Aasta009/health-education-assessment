@@ -5,6 +5,7 @@ import { ensureReady, getPool } from "@/lib/db";
 import { readSession } from "@/lib/session";
 import { FIELDS } from "@/lib/fields";
 import { ALL_AI_CHAPTERS } from "@/lib/ai-chapters";
+import { formatTaipei } from "@/lib/format";
 
 const FIELD_LABEL = new Map(FIELDS.map((f) => [f.key, f.label]));
 
@@ -50,7 +51,7 @@ export async function GET(_req: NextRequest) {
       class: r.class, group_no: r.group_no,
       field: FIELD_LABEL.get(r.field_key) || r.field_key,
       student_id: r.student_id, name: r.name,
-      content: r.content, created_at: r.created_at,
+      content: r.content, created_at: formatTaipei(r.created_at),
     });
   }
 
@@ -67,7 +68,7 @@ export async function GET(_req: NextRequest) {
     ws2.addRow({
       class: r.class, group_no: r.group_no,
       field: FIELD_LABEL.get(r.field_key) || r.field_key,
-      content: r.content, finalized_by_name: r.finalized_by_name, created_at: r.created_at,
+      content: r.content, finalized_by_name: r.finalized_by_name, created_at: formatTaipei(r.created_at),
     });
   }
 
@@ -83,7 +84,7 @@ export async function GET(_req: NextRequest) {
   for (const r of reflections.rows) {
     ws3.addRow({
       class: r.class, group_no: r.group_no, student_id: r.student_id, name: r.name,
-      content: r.content, updated_at: r.updated_at,
+      content: r.content, updated_at: formatTaipei(r.updated_at),
     });
   }
 
@@ -125,7 +126,7 @@ export async function GET(_req: NextRequest) {
     ws4.addRow({
       class: s.class, group_no: s.group_no, chapter_key: s.chapter_key,
       title: aiChapterTitle.get(s.chapter_key) || s.chapter_key,
-      before_ai: s.before_ai, created_at: s.created_at, completed_at: s.completed_at,
+      before_ai: s.before_ai, created_at: formatTaipei(s.created_at), completed_at: formatTaipei(s.completed_at),
       total_rounds: roundCountBySession.get(s.id) || 0, final_round: s.final_round,
       decision: s.decision, after_ai: s.after_ai, revision_reason: s.revision_reason,
       status: s.status,
@@ -149,7 +150,7 @@ export async function GET(_req: NextRequest) {
     ws5.addRow({
       class: r.class, group_no: r.group_no, chapter_key: r.chapter_key, round_no: r.round_no,
       prompt: r.prompt, ai_response: r.ai_response, judgment: r.judgment,
-      judgment_reason: r.judgment_reason, created_by_name: r.created_by_name, created_at: r.created_at,
+      judgment_reason: r.judgment_reason, created_by_name: r.created_by_name, created_at: formatTaipei(r.created_at),
     });
   }
 
@@ -166,7 +167,7 @@ export async function GET(_req: NextRequest) {
   for (const e of aiEvents.rows) {
     ws6.addRow({
       class: e.class, group_no: e.group_no, chapter_key: e.chapter_key,
-      event_type: e.event_type, detail: e.detail, actor: e.actor, created_at: e.created_at,
+      event_type: e.event_type, detail: e.detail, actor: e.actor, created_at: formatTaipei(e.created_at),
     });
   }
 

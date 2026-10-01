@@ -5,6 +5,7 @@ import Link from "next/link";
 import { FIELDS, ALL_KEYS, getField } from "@/lib/fields";
 import { getClassDashboard, STALL_WARN_MINUTES, STALL_ALERT_MINUTES } from "@/lib/dashboard";
 import { ALL_AI_CHAPTERS } from "@/lib/ai-chapters";
+import { formatTaipei } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -131,7 +132,7 @@ export default async function TeacherGroupDetail({ params }: { params: { cls: st
                     </td>
                     <td style={{ padding: 6, color: STATUS_DOT[st] }}>{STATUS_LABEL[st]}</td>
                     <td style={{ padding: 6 }}>{answered} / {ALL_KEYS.length}</td>
-                    <td style={{ padding: 6 }}>{m.last_at ? new Date(m.last_at).toLocaleString("zh-TW") : "—"}</td>
+                    <td style={{ padding: 6 }}>{m.last_at ? formatTaipei(m.last_at) : "—"}</td>
                   </tr>
                 );
               })}
@@ -145,7 +146,7 @@ export default async function TeacherGroupDetail({ params }: { params: { cls: st
           <h4 style={{ marginTop: 0 }}>關卡時間軸</h4>
           {timeline.rows.map((t, i) => (
             <p key={i} style={{ margin: "4px 0", fontSize: 13.5 }}>
-              {new Date(t.created_at).toLocaleString("zh-TW")}　✓ 完成「{getField(t.field_key)?.label || t.field_key}」（{t.finalized_by_name}）
+              {formatTaipei(t.created_at)}　✓ 完成「{getField(t.field_key)?.label || t.field_key}」（{t.finalized_by_name}）
             </p>
           ))}
         </div>
@@ -178,7 +179,7 @@ export default async function TeacherGroupDetail({ params }: { params: { cls: st
             {rounds.map((r) => (
               <p key={r.round_no} style={{ fontSize: 12.5, margin: "4px 0", borderLeft: "3px solid var(--line)", paddingLeft: 8 }}>
                 <b>Round {r.round_no}{s.final_round === r.round_no ? " ★FINAL" : ""}</b>　
-                判斷：{r.judgment}｜{new Date(r.created_at).toLocaleString("zh-TW")}（{r.created_by_name}）<br />
+                判斷：{r.judgment}｜{formatTaipei(r.created_at)}（{r.created_by_name}）<br />
                 提問：{r.prompt}<br />回覆：{r.ai_response}
                 {r.judgment_reason && <>　原因：{r.judgment_reason}</>}
               </p>
