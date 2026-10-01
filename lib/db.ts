@@ -60,15 +60,6 @@ CREATE TABLE IF NOT EXISTS group_finals (
   PRIMARY KEY (class, group_no, field_key)
 );
 
-CREATE TABLE IF NOT EXISTS reflections (
-  student_id TEXT PRIMARY KEY REFERENCES students(student_id),
-  name TEXT,
-  class TEXT NOT NULL,
-  group_no INT,
-  content TEXT,
-  updated_at TIMESTAMPTZ DEFAULT now()
-);
-
 CREATE TABLE IF NOT EXISTS group_docs (
   class TEXT NOT NULL,
   group_no INT NOT NULL,
@@ -108,52 +99,6 @@ CREATE TABLE IF NOT EXISTS finalize_log (
 CREATE TABLE IF NOT EXISTS stage_gate (
   class TEXT PRIMARY KEY,
   unlocked_level INT NOT NULL DEFAULT 1
-);
-
--- AI-student iterative reasoning module (separate from the six chapters —
--- students use NotebookLM externally and paste meaningful excerpts here).
--- One session per (class, group, chapter_key); chapter_key is one of
--- ch1..ch4 (個別關卡) or integrated56 (第五、六關整合).
-CREATE TABLE IF NOT EXISTS ai_sessions (
-  id SERIAL PRIMARY KEY,
-  class TEXT NOT NULL,
-  group_no INT NOT NULL,
-  chapter_key TEXT NOT NULL,
-  before_ai TEXT,
-  status TEXT NOT NULL DEFAULT 'open',
-  final_round INT,
-  decision TEXT,
-  after_ai TEXT,
-  revision_reason TEXT,
-  created_at TIMESTAMPTZ DEFAULT now(),
-  completed_at TIMESTAMPTZ,
-  UNIQUE(class, group_no, chapter_key)
-);
-
--- Every round is append-only — never updated or deleted, per spec: new
--- rounds never overwrite previous ones.
-CREATE TABLE IF NOT EXISTS ai_rounds (
-  id SERIAL PRIMARY KEY,
-  session_id INT NOT NULL REFERENCES ai_sessions(id),
-  round_no INT NOT NULL,
-  prompt TEXT,
-  ai_response TEXT,
-  judgment TEXT,
-  judgment_reason TEXT,
-  created_by TEXT,
-  created_by_name TEXT,
-  created_at TIMESTAMPTZ DEFAULT now(),
-  UNIQUE(session_id, round_no)
-);
-
--- Audit trail: session created / round added / finalized / reopened / etc.
-CREATE TABLE IF NOT EXISTS ai_event_log (
-  id SERIAL PRIMARY KEY,
-  session_id INT NOT NULL REFERENCES ai_sessions(id),
-  event_type TEXT NOT NULL,
-  detail TEXT,
-  actor TEXT,
-  created_at TIMESTAMPTZ DEFAULT now()
 );
 `;
 

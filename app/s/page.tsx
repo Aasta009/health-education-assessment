@@ -1,27 +1,19 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ensureReady, getPool } from "@/lib/db";
+import { ensureReady, getPool, getUnlockedLevel } from "@/lib/db";
 import { readSession } from "@/lib/session";
-import { FIELDS, ALL_KEYS, GROUP_STORY, LEVEL_BY_GROUP } from "@/lib/fields";
-import { getUnlockedLevel } from "@/lib/db";
+import { FIELDS, ALL_KEYS, GROUP_STORY, LEVEL_BY_GROUP, CONSOLIDATED_GROUPS, ORDERED_GROUPS } from "@/lib/fields";
+import ExportDiscussionButton from "./_shared/ExportDiscussionButton";
 
 export const dynamic = "force-dynamic";
 
 const ICON_FILES: Record<string, string> = {
-  snail: "icon-snail.png",
-  seed: "icon-seed.png",
-  river: "icon-river.png",
-  house: "icon-house.png",
-  girl: "icon-girl.png",
-  tree: "icon-tree.png",
+  "主題方向": "icon-snail.png",
+  "學習者評估內容規劃": "icon-seed.png",
+  "訪談綱要": "icon-river.png",
+  "AI迭代結果": "icon-girl.png",
+  "活動規劃書": "icon-house.png",
 };
-
-function ChapterIcon({ name }: { name: string }) {
-  const file = ICON_FILES[name] || ICON_FILES.snail;
-  return (
-    <img src={`/images/${file}`} alt="" style={{ width: 32, height: 32, objectFit: "contain" }} />
-  );
-}
 
 export default async function StudentDashboard() {
   const session = readSession();
@@ -36,7 +28,7 @@ export default async function StudentDashboard() {
         <div className="card-story">
           <h2 className="story-title" style={{ fontSize: 20 }}>你好，{session.name}</h2>
           <p style={{ color: "var(--ink-soft)" }}>
-            旅程還沒為你標好起點——請等老師公布分組後再回來看看（網址不變，之後直接用學號登入即可）。
+            還沒被指派組別——請等老師公布分組後再回來看看（網址不變，之後直接用學號登入即可）。
           </p>
         </div>
       </main>
@@ -49,9 +41,10 @@ export default async function StudentDashboard() {
   );
   const doneKeys = new Set(finals.rows.map((r) => r.field_key));
   const unlockedLevel = await getUnlockedLevel(session.cls);
-
-  const groups = Array.from(new Set(FIELDS.map((f) => f.group)));
   const allDone = ALL_KEYS.every((k) => doneKeys.has(k));
+
+  const discussionKeys = FIELDS.filter((f) => ["主題方向", "學習者評估內容規劃", "訪談綱要"].includes(f.group)).map((f) => f.key);
+  const discussionReady = discussionKeys.every((k) => doneKeys.has(k));
 
   return (
     <main className="container" style={{ paddingTop: 36 }}>
@@ -62,102 +55,89 @@ export default async function StudentDashboard() {
         </p>
       </div>
 
+      <div className="card-story">
+        <h4 style={{ marginTop: 0, fontSize: 15 }}>關於這份作業</h4>
+        <p style={{ fontSize: 13.5, color: "var(--ink-soft)", lineHeight: 1.8, margin: 0 }}>
+          這五關要帶你們完成「學習者評估」的前置規劃：確認主題、規劃評估內容、訪談關鍵人物、跟 AI 討論修正、最後完成活動規劃書初版。
+          每一關的評估方向與內容，都需要組員仔細思考、負責任地共同決定——這些決定會直接影響後續正式衛教活動的設計，請不要隨意填寫或急著定稿。
+          每個欄位都遵循「先個人想法、再組內討論定稿」的流程，任何組員都可以按下定稿，定稿後會直接告訴你下一步要去哪裡。
+        </p>
+      </div>
+
       <div style={{ position: "relative", paddingLeft: 26, marginTop: 30 }}>
         <div style={{ position: "absolute", left: 14, top: 6, bottom: 6, width: 2,
           background: "repeating-linear-gradient(to bottom, var(--forest) 0 6px, transparent 6px 12px)" }} />
 
-        {groups.map((g, idx) => {
+        {ORDERED_GROUPS.map((g, idx) => {
           const story = GROUP_STORY[g];
           const groupFields = FIELDS.filter((f) => f.group === g);
           const groupDone = groupFields.every((f) => doneKeys.has(f.key));
           const chapterLevel = LEVEL_BY_GROUP[g] ?? 99;
           const isLocked = chapterLevel > unlockedLevel;
-          const stage1AllDone = FIELDS.filter((f) => f.stage === 1).every((f) => doneKeys.has(f.key));
-          const stage2AllDone = FIELDS.filter((f) => f.stage === 2).every((f) => doneKeys.has(f.key));
+          const consolidatedRoute = CONSOLIDATED_GROUPS[g];
+
           return (
             <div key={g}>
-              {idx === 4 && (
-                <div className="card-story" style={{ marginLeft: 14, marginBottom: 26, background: stage1AllDone ? "#FCF8ED" : "#f3ecdd" }}>
-                  <h4 className="story-title" style={{ marginTop: 0, fontSize: 15 }}>AI－學生迭代式推理歷程 I　<span style={{ fontSize: 12, color: "var(--terracotta)" }}>建議 50 分鐘</span></h4>
-                  {stage1AllDone ? (
+              <div style={{ position: "relative", marginBottom: 26, opacity: isLocked ? 0.55 : 1 }}>
+                <div style={{ position: "absolute", left: -28, top: -2,
+                  width: 38, height: 38, borderRadius: "50%", overflow: "hidden",
+                  background: groupDone ? "#D6A756" : "#FCF8ED",
+                  border: "2px solid var(--forest)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <img src={`/images/${ICON_FILES[g]}`} alt="" style={{ width: 28, height: 28, objectFit: "contain" }} />
+                </div>
+                <div className="card-story" style={{ marginLeft: 14 }}>
+                  <p style={{ margin: "0 0 6px", fontSize: 12.5, color: "var(--terracotta)", fontWeight: 700 }}>
+                    {story?.chapter}　{story?.minutes != null ? `・建議 ${story.minutes} 分鐘` : "・課後自行完成"}
+                  </p>
+                  <h4 className="story-title" style={{ margin: "0 0 10px", fontSize: 17 }}>{g}</h4>
+                  {isLocked ? (
+                    <p style={{ fontSize: 13.5, color: "#8a5a1f", margin: 0 }}>這一關還沒開放，請等老師／助教開啟。</p>
+                  ) : consolidatedRoute ? (
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <Link href={consolidatedRoute}>前往作答</Link>
+                      <span className={`ribbon ${groupDone ? "ribbon-done" : "ribbon-pending"}`}>
+                        {groupDone ? "已完成" : "未完成"}
+                      </span>
+                    </div>
+                  ) : (
+                    groupFields.map((f) => (
+                      <div key={f.key} style={{ display: "flex", justifyContent: "space-between", alignItems: "center",
+                        padding: "9px 0", borderBottom: "1px solid var(--line)" }}>
+                        <Link href={`/s/field/${f.key}`}>{f.label}</Link>
+                        <span className={`ribbon ${doneKeys.has(f.key) ? "ribbon-done" : "ribbon-pending"}`}>
+                          {doneKeys.has(f.key) ? "已定稿" : "未定稿"}
+                        </span>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              {g === "訪談綱要" && (
+                <div className="card-story" style={{ marginLeft: 14, marginBottom: 26, background: discussionReady ? "#FCF8ED" : "#f3ecdd", textAlign: "center" }}>
+                  <h4 style={{ marginTop: 0, fontSize: 15 }}>前三關完成後</h4>
+                  {discussionReady ? (
                     <>
-                      <p style={{ fontSize: 13, color: "var(--ink-soft)" }}>第一～四關都定稿了，把你們跟 NotebookLM 討論的過程記錄下來。</p>
-                      <Link href="/s/ai-discussion-1"><button className="btn-story outline" style={{ fontSize: 13, padding: "6px 14px" }}>前往記錄 AI 討論</button></Link>
+                      <p style={{ fontSize: 13, color: "var(--ink-soft)", marginBottom: 10 }}>
+                        前三關都定稿了，可以匯出目前的組內討論結果，帶去跟 NotebookLM 討論。
+                      </p>
+                      <ExportDiscussionButton />
                     </>
                   ) : (
-                    <p style={{ fontSize: 13, color: "#8a5a1f" }}>完成第一～四關的組內定稿後，這裡才會開放。</p>
+                    <p style={{ fontSize: 13, color: "#8a5a1f", margin: 0 }}>完成前三關的組內定稿後，這裡會開放匯出。</p>
                   )}
                 </div>
               )}
-            <div style={{ position: "relative", marginBottom: 26, opacity: isLocked ? 0.55 : 1 }}>
-              <div style={{ position: "absolute", left: -28, top: -2,
-                width: 38, height: 38, borderRadius: "50%", overflow: "hidden",
-                background: groupDone ? "#D6A756" : "#FCF8ED",
-                border: "2px solid var(--forest)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                {story && <ChapterIcon name={story.icon} />}
-              </div>
-              <div className="card-story" style={{ marginLeft: 14 }}>
-                {story && (
-                  <p style={{ margin: "0 0 4px", fontSize: 12.5, color: "var(--terracotta)", fontFamily: "'Noto Serif TC', serif", fontWeight: 700 }}>
-                    {story.chapter}　・　建議 {story.minutes} 分鐘
-                  </p>
-                )}
-                <h4 className="story-title" style={{ margin: "0 0 6px", fontSize: 17 }}>{story?.title || g}</h4>
-                {story && <p style={{ fontSize: 13.5, color: "var(--ink-soft)", margin: "0 0 12px", lineHeight: 1.7 }}>{story.blurb}</p>}
-                {isLocked ? (
-                  <p style={{ fontSize: 13.5, color: "#8a5a1f", margin: 0 }}>這一段路還沒開放，請等老師／助教開啟。</p>
-                ) : (
-                  groupFields.map((f) => (
-                    <div key={f.key} style={{ display: "flex", justifyContent: "space-between", alignItems: "center",
-                      padding: "9px 0", borderBottom: "1px solid var(--line)" }}>
-                      <Link href={`/s/field/${f.key}`}>{f.label}</Link>
-                      <span className={`ribbon ${doneKeys.has(f.key) ? "ribbon-done" : "ribbon-pending"}`}>
-                        {doneKeys.has(f.key) ? "已定稿" : "未定稿"}
-                      </span>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-            {idx === groups.length - 1 && (
-              <div className="card-story" style={{ marginLeft: 14, marginTop: 26, background: stage2AllDone ? "#FCF8ED" : "#f3ecdd" }}>
-                <h4 className="story-title" style={{ marginTop: 0, fontSize: 15 }}>AI－學生迭代式推理歷程 II　<span style={{ fontSize: 12, color: "var(--terracotta)" }}>建議 50 分鐘</span></h4>
-                {stage2AllDone ? (
-                  <>
-                    <p style={{ fontSize: 13, color: "var(--ink-soft)" }}>第五、六關都定稿了，把整合討論的過程記錄下來，形成最終報告要採用的內容。</p>
-                    <Link href="/s/ai-discussion-2"><button className="btn-story outline" style={{ fontSize: 13, padding: "6px 14px" }}>前往記錄 AI 討論</button></Link>
-                  </>
-                ) : (
-                  <p style={{ fontSize: 13, color: "#8a5a1f" }}>完成第五、六關的組內定稿後，這裡才會開放。</p>
-                )}
-              </div>
-            )}
             </div>
           );
         })}
       </div>
 
-      <div className="card-story" style={{ textAlign: "center", padding: 0, overflow: "hidden" }}>
-        {allDone && (
-          <img src="/images/finale-scene.jpg" alt="世界盡頭的大樹"
-            style={{ width: "100%", display: "block" }} />
-        )}
-        <div style={{ padding: "20px 24px" }}>
-          <h4 className="story-title" style={{ marginTop: 0, fontSize: 17 }}>世界盡頭的樹</h4>
-          {allDone ? (
-            <>
-              <p style={{ color: "var(--ink-soft)", fontSize: 14 }}>所有片段都到齊了，可以讓它們長成一份完整的報告。</p>
-              <a href="/api/export/final"><button className="btn-story">下載完整學習者評估報告（Word）</button></a>
-              <p style={{ marginTop: 14 }}><Link href="/s/reflection">→ 前往填寫個人反思心得</Link></p>
-            </>
-          ) : (
-            <>
-              <p style={{ color: "#8a5a1f" }}>還有幾段路沒走完——完成上面所有「組內定稿」，樹才會長出來。</p>
-              <p style={{ marginTop: 14 }}><Link href="/s/reflection">→ 前往填寫個人反思心得</Link></p>
-            </>
-          )}
+      {allDone && (
+        <div className="card-story" style={{ textAlign: "center" }}>
+          <p style={{ margin: 0, fontSize: 14, color: "var(--forest)" }}>✓ 五關全部完成了！</p>
         </div>
-      </div>
+      )}
     </main>
   );
 }

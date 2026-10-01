@@ -4,7 +4,6 @@ import { readSession } from "@/lib/session";
 import Link from "next/link";
 import { FIELDS, ALL_KEYS, getField } from "@/lib/fields";
 import { getClassDashboard, STALL_WARN_MINUTES, STALL_ALERT_MINUTES } from "@/lib/dashboard";
-import { ALL_AI_CHAPTERS } from "@/lib/ai-chapters";
 import { formatTaipei } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -53,23 +52,6 @@ export default async function TeacherGroupDetail({ params }: { params: { cls: st
      ORDER BY s.name`,
     [cls, groupNo]
   );
-
-  const aiSessions = await pool.query(
-    `SELECT * FROM ai_sessions WHERE class=$1 AND group_no=$2`,
-    [cls, groupNo]
-  );
-  const aiSessionMap = new Map(aiSessions.rows.map((s) => [s.chapter_key, s]));
-  const aiRoundsBySession = new Map<number, any[]>();
-  if (aiSessions.rows.length > 0) {
-    const roundsRes = await pool.query(
-      `SELECT * FROM ai_rounds WHERE session_id = ANY($1) ORDER BY session_id, round_no`,
-      [aiSessions.rows.map((s) => s.id)]
-    );
-    for (const r of roundsRes.rows) {
-      if (!aiRoundsBySession.has(r.session_id)) aiRoundsBySession.set(r.session_id, []);
-      aiRoundsBySession.get(r.session_id)!.push(r);
-    }
-  }
 
   const finalMap = new Map(finals.rows.map((r) => [r.field_key, r]));
   const byField = new Map<string, any[]>();
@@ -152,57 +134,13 @@ export default async function TeacherGroupDetail({ params }: { params: { cls: st
         </div>
       )}
 
-      <h3 className="story-title" style={{ fontSize: 17 }}>AI－學生迭代式推理紀錄</h3>
-      {ALL_AI_CHAPTERS.map((chapter) => {
-        const s = aiSessionMap.get(chapter.key);
-        if (!s) {
-          return (
-            <div className="card-story" key={chapter.key}>
-              <h4 style={{ marginTop: 0 }}>{chapter.title}</h4>
-              <p style={{ color: "#999" }}>尚未開始</p>
-            </div>
-          );
-        }
-        const rounds = aiRoundsBySession.get(s.id) || [];
-        return (
-          <div className="card-story" key={chapter.key}>
-            <h4 style={{ marginTop: 0 }}>
-              {chapter.title}　
-              <span style={{ fontSize: 12, color: s.status === "completed" ? "var(--forest)" : "#8a5a1f" }}>
-                {s.status === "completed" ? "✓ 已完成" : "進行中"}
-              </span>
-            </h4>
-            <div style={{ background: "#f3ecdd", borderRadius: 6, padding: 8, marginBottom: 8 }}>
-              <p style={{ fontSize: 11, fontWeight: 700, margin: "0 0 2px" }}>BEFORE AI</p>
-              <p style={{ fontSize: 12.5, whiteSpace: "pre-wrap", margin: 0 }}>{s.before_ai}</p>
-            </div>
-            {rounds.map((r) => (
-              <p key={r.round_no} style={{ fontSize: 12.5, margin: "4px 0", borderLeft: "3px solid var(--line)", paddingLeft: 8 }}>
-                <b>Round {r.round_no}{s.final_round === r.round_no ? " ★FINAL" : ""}</b>　
-                判斷：{r.judgment}｜{formatTaipei(r.created_at)}（{r.created_by_name}）<br />
-                提問：{r.prompt}<br />回覆：{r.ai_response}
-                {r.judgment_reason && <>　原因：{r.judgment_reason}</>}
-              </p>
-            ))}
-            {s.decision && (
-              <div style={{ background: "#E4EEE2", borderRadius: 6, padding: 8, marginTop: 8 }}>
-                <p style={{ fontSize: 11, fontWeight: 700, margin: "0 0 2px" }}>
-                  AFTER AI（{s.decision === "maintain" ? "維持原定稿" : "已修改"}）
-                </p>
-                <p style={{ fontSize: 12.5, whiteSpace: "pre-wrap", margin: 0 }}>{s.after_ai}</p>
-              </div>
-            )}
-          </div>
-        );
-      })}
-
       <h3 className="story-title" style={{ fontSize: 17 }}>各關卡任務完成狀況</h3>
       {FIELDS.map((f) => {
         const members = byField.get(f.key) || [];
         const final = finalMap.get(f.key);
         return (
           <div className="card-story" key={f.key}>
-            <h4 style={{ marginTop: 0 }}>{f.label}</h4>
+            <h4 style={{ marginTop: 0, color: f.highlight ? "#B33" : undefined }}>{f.label}</h4>
             {members.length === 0 && <p style={{ color: "#999" }}>尚無成員填寫</p>}
             {members.map((m) => (
               <p key={m.student_id} style={{ margin: "4px 0" }}>

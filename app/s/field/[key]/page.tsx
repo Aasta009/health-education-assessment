@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
+import { getNextStep } from "@/lib/fields";
 
 type Member = { student_id: string; name: string; content: string; updated_at: string };
 
@@ -15,6 +17,8 @@ export default function FieldPage() {
   const [savingMine, setSavingMine] = useState(false);
   const [savingFinal, setSavingFinal] = useState(false);
   const [err, setErr] = useState("");
+  const [nextStep, setNextStep] = useState<{ route: string; label: string } | null>(null);
+  const [justFinalized, setJustFinalized] = useState(false);
 
   async function load() {
     const res = await fetch(`/api/field/${key}`);
@@ -56,7 +60,13 @@ export default function FieldPage() {
       body: JSON.stringify({ content: mergeText }),
     });
     setSavingFinal(false);
-    load();
+    await load();
+    const progRes = await fetch("/api/progress");
+    if (progRes.ok) {
+      const { doneKeys } = await progRes.json();
+      setNextStep(getNextStep(new Set(doneKeys)));
+    }
+    setJustFinalized(true);
   }
 
   if (err) return <main className="container"><p style={{ color: "#b33" }}>{err}</p></main>;
@@ -66,8 +76,10 @@ export default function FieldPage() {
 
   return (
     <main className="container" style={{ paddingTop: 32 }}>
-      <a href="/s">← 回到旅程地圖</a>
-      <h2 className="story-title" style={{ fontSize: 21 }}>{field.label}</h2>
+      <a href="/s">← 回到關卡總覽</a>
+      <h2 className="story-title" style={{ fontSize: 21, color: field.highlight ? "#B33" : undefined }}>
+        {field.label}
+      </h2>
       {field.prompt && <p style={{ color: "#7a6a52", whiteSpace: "pre-wrap", fontSize: 14, lineHeight: 1.7 }}>{field.prompt}</p>}
 
       <div className="card-story">
@@ -90,7 +102,9 @@ export default function FieldPage() {
       </div>
 
       <div className="card-story">
-        <h4 style={{ marginTop: 0 }}>3. 組內定稿版本</h4>
+        <h4 style={{ marginTop: 0, color: field.highlight ? "#B33" : undefined }}>
+          3. 組內定稿版本{field.highlight && "（評分重點）"}
+        </h4>
         {final && (
           <p style={{ fontSize: 13, color: "#7a6a52" }}>
             上次定稿人：{final.finalized_by_name}
@@ -101,6 +115,19 @@ export default function FieldPage() {
         <button className="btn-story" style={{ marginTop: 10 }} onClick={finalize} disabled={savingFinal}>
           {savingFinal ? "儲存中…" : "定稿為組別版本"}
         </button>
+
+        {justFinalized && (
+          <div style={{ marginTop: 14, padding: 12, background: "#E4EEE2", borderRadius: 8 }}>
+            {nextStep ? (
+              <>
+                <p style={{ margin: "0 0 8px", fontSize: 13.5 }}>✓ 已定稿，下一步：</p>
+                <Link href={nextStep.route}><button className="btn-story">前往「{nextStep.label}」→</button></Link>
+              </>
+            ) : (
+              <p style={{ margin: 0, fontSize: 13.5 }}>✓ 全部關卡都完成了！</p>
+            )}
+          </div>
+        )}
       </div>
     </main>
   );

@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 import { ensureReady } from "@/lib/db";
 import { readSession } from "@/lib/session";
-import { buildFullReportDocx } from "@/lib/report";
+import { ALL_KEYS } from "@/lib/fields";
+import { buildDocxForKeys } from "@/lib/report";
 
 export async function GET(req: NextRequest) {
   await ensureReady();
@@ -16,7 +17,7 @@ export async function GET(req: NextRequest) {
   if (!cls || !groupNo) {
     return NextResponse.json({ error: "參數錯誤" }, { status: 400 });
   }
-  const buffer = await buildFullReportDocx(cls, groupNo);
+  const buffer = await buildDocxForKeys(cls, groupNo, ALL_KEYS, "學習者評估報告");
   if (!buffer) {
     return NextResponse.json({ error: "這一組尚未完成定稿，無法匯出" }, { status: 409 });
   }

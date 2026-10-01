@@ -41,13 +41,9 @@ export default function LoginPage() {
             boxShadow: "0 4px 16px rgba(58,46,35,0.25)" }}
         />
       </div>
-      <p style={{ textAlign: "center", color: "var(--ink-soft)", fontSize: 14, marginTop: 0 }}>
-        它漏了一個洞，但你還是帶著它上路了。
-      </p>
-
       <div className="card-story" style={{ maxWidth: 400, margin: "18px auto 0" }}>
-        <h2 className="story-title" style={{ fontSize: 20, marginTop: 0 }}>報上你的學號</h2>
-        <p style={{ color: "var(--ink-soft)", fontSize: 14 }}>這樣故事才知道，該把哪一段路交給你。</p>
+        <h2 className="story-title" style={{ fontSize: 20, marginTop: 0 }}>學生登入</h2>
+        <p style={{ color: "var(--ink-soft)", fontSize: 14 }}>請輸入您的學號</p>
         <form onSubmit={submit}>
           <input
             type="text"
@@ -58,7 +54,7 @@ export default function LoginPage() {
           />
           {err && <p style={{ color: "#a4432b", fontSize: 13.5 }}>{err}</p>}
           <button className="btn-story" style={{ marginTop: 14, width: "100%" }} disabled={loading}>
-            {loading ? "推開門中…" : "推開門"}
+            {loading ? "登入中…" : "登入"}
           </button>
         </form>
       </div>
