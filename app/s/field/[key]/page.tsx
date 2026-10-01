@@ -68,7 +68,7 @@ export default function FieldPage() {
     <main className="container" style={{ paddingTop: 32 }}>
       <a href="/s">← 回到旅程地圖</a>
       <h2 className="story-title" style={{ fontSize: 21 }}>{field.label}</h2>
-      {field.prompt && <p style={{ color: "#7a6a52" }}>{field.prompt}</p>}
+      {field.prompt && <p style={{ color: "#7a6a52", whiteSpace: "pre-wrap", fontSize: 14, lineHeight: 1.7 }}>{field.prompt}</p>}
 
       <div className="card-story">
         <h4 style={{ marginTop: 0 }}>1. 我的想法（個人）</h4>
