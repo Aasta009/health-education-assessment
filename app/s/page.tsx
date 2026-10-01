@@ -66,14 +66,30 @@ export default async function StudentDashboard() {
         <div style={{ position: "absolute", left: 14, top: 6, bottom: 6, width: 2,
           background: "repeating-linear-gradient(to bottom, var(--forest) 0 6px, transparent 6px 12px)" }} />
 
-        {groups.map((g) => {
+        {groups.map((g, idx) => {
           const story = GROUP_STORY[g];
           const groupFields = FIELDS.filter((f) => f.group === g);
           const groupDone = groupFields.every((f) => doneKeys.has(f.key));
           const chapterLevel = LEVEL_BY_GROUP[g] ?? 99;
           const isLocked = chapterLevel > unlockedLevel;
+          const stage1AllDone = FIELDS.filter((f) => f.stage === 1).every((f) => doneKeys.has(f.key));
+          const stage2AllDone = FIELDS.filter((f) => f.stage === 2).every((f) => doneKeys.has(f.key));
           return (
-            <div key={g} style={{ position: "relative", marginBottom: 26, opacity: isLocked ? 0.55 : 1 }}>
+            <div key={g}>
+              {idx === 4 && (
+                <div className="card-story" style={{ marginLeft: 14, marginBottom: 26, background: stage1AllDone ? "#FCF8ED" : "#f3ecdd" }}>
+                  <h4 className="story-title" style={{ marginTop: 0, fontSize: 15 }}>AI－學生迭代式推理歷程 I</h4>
+                  {stage1AllDone ? (
+                    <>
+                      <p style={{ fontSize: 13, color: "var(--ink-soft)" }}>第一～四關都定稿了，把你們跟 NotebookLM 討論的過程記錄下來。</p>
+                      <Link href="/s/ai-discussion-1"><button className="btn-story outline" style={{ fontSize: 13, padding: "6px 14px" }}>前往記錄 AI 討論</button></Link>
+                    </>
+                  ) : (
+                    <p style={{ fontSize: 13, color: "#8a5a1f" }}>完成第一～四關的組內定稿後，這裡才會開放。</p>
+                  )}
+                </div>
+              )}
+            <div style={{ position: "relative", marginBottom: 26, opacity: isLocked ? 0.55 : 1 }}>
               <div style={{ position: "absolute", left: -28, top: -2,
                 width: 38, height: 38, borderRadius: "50%", overflow: "hidden",
                 background: groupDone ? "#D6A756" : "#FCF8ED",
@@ -102,6 +118,20 @@ export default async function StudentDashboard() {
                   ))
                 )}
               </div>
+            </div>
+            {idx === groups.length - 1 && (
+              <div className="card-story" style={{ marginLeft: 14, marginTop: 26, background: stage2AllDone ? "#FCF8ED" : "#f3ecdd" }}>
+                <h4 className="story-title" style={{ marginTop: 0, fontSize: 15 }}>AI－學生迭代式推理歷程 II</h4>
+                {stage2AllDone ? (
+                  <>
+                    <p style={{ fontSize: 13, color: "var(--ink-soft)" }}>第五、六關都定稿了，把整合討論的過程記錄下來，形成最終報告要採用的內容。</p>
+                    <Link href="/s/ai-discussion-2"><button className="btn-story outline" style={{ fontSize: 13, padding: "6px 14px" }}>前往記錄 AI 討論</button></Link>
+                  </>
+                ) : (
+                  <p style={{ fontSize: 13, color: "#8a5a1f" }}>完成第五、六關的組內定稿後，這裡才會開放。</p>
+                )}
+              </div>
+            )}
             </div>
           );
         })}
