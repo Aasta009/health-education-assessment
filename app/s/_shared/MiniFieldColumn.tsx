@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import PromptText from "./PromptText";
 
 type Member = { student_id: string; name: string; content: string; updated_at: string };
 
@@ -70,7 +71,10 @@ export default function MiniFieldColumn({
       <h4 className="story-title" style={{ fontSize: 15, marginTop: 0, color: field.highlight ? "#B33" : undefined }}>
         {field.label}
       </h4>
-      {field.prompt && <p style={{ color: "#7a6a52", whiteSpace: "pre-wrap", fontSize: 12.5, lineHeight: 1.6 }}>{field.prompt}</p>}
+      {field.prompt && (
+        <PromptText prompt={field.prompt} highlightPhrase={field.highlightPhrase}
+          style={{ color: "#7a6a52", whiteSpace: "pre-wrap", fontSize: 12.5, lineHeight: 1.6 }} />
+      )}
 
       {!field.skipIndividual && (
         <>

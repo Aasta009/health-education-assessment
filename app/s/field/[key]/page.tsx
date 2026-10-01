@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { getNextStep } from "@/lib/fields";
+import PromptText from "../../_shared/PromptText";
 
 type Member = { student_id: string; name: string; content: string; updated_at: string };
 
@@ -80,7 +81,10 @@ export default function FieldPage() {
       <h2 className="story-title" style={{ fontSize: 21, color: field.highlight ? "#B33" : undefined }}>
         {field.label}
       </h2>
-      {field.prompt && <p style={{ color: "#7a6a52", whiteSpace: "pre-wrap", fontSize: 14, lineHeight: 1.7 }}>{field.prompt}</p>}
+      {field.prompt && (
+        <PromptText prompt={field.prompt} highlightPhrase={field.highlightPhrase}
+          style={{ color: "#7a6a52", whiteSpace: "pre-wrap", fontSize: 14, lineHeight: 1.7 }} />
+      )}
 
       <div className="card-story">
         <h4 style={{ marginTop: 0 }}>1. 我的想法（個人）</h4>

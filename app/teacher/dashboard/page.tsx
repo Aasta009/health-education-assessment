@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ensureReady, getPool } from "@/lib/db";
 import { readSession } from "@/lib/session";
-import { ALL_KEYS } from "@/lib/fields";
+import { ALL_KEYS, FIELDS } from "@/lib/fields";
 import { getClassDashboard } from "@/lib/dashboard";
 
 export const dynamic = "force-dynamic";
@@ -15,11 +15,22 @@ const STATUS_DOT: Record<string, string> = {
 const STATUS_LABEL: Record<string, string> = {
   done: "✓ 已完成", in_progress: "進行中", not_started: "尚未開始",
 };
-const CELL: Record<string, { symbol: string; color: string }> = {
-  done: { symbol: "●", color: "#3F5B44" },
-  in_progress: { symbol: "◐", color: "#D6A756" },
-  open: { symbol: "○", color: "#cfc4a8" },
+
+// Each chapter gets its own color so the dot strip shows at a glance which
+// chapter a group is stuck on, not just how many fields are done overall.
+const CHAPTER_COLORS: Record<string, string> = {
+  "主題方向": "#4A6FA1",
+  "學習者評估內容規劃": "#C1673F",
+  "訪談綱要": "#3F5B44",
+  "AI迭代結果": "#B3862D",
+  "活動規劃書": "#7B4F9E",
 };
+const KEY_TO_GROUP: Record<string, string> = Object.fromEntries(FIELDS.map((f) => [f.key, f.group]));
+const SYMBOL: Record<string, string> = { done: "●", in_progress: "◐", open: "○" };
+function cellStyle(status: string, key: string) {
+  const color = status === "open" ? "#cfc4a8" : CHAPTER_COLORS[KEY_TO_GROUP[key]] || "#cfc4a8";
+  return { symbol: SYMBOL[status], color };
+}
 
 export default async function TeacherDashboard({ searchParams }: { searchParams: { cls?: string } }) {
   const session = readSession();
@@ -88,7 +99,10 @@ export default async function TeacherDashboard({ searchParams }: { searchParams:
         <div className="card-story">
           <h3 className="story-title" style={{ fontSize: 17, marginTop: 0 }}>組別進度</h3>
           <p style={{ fontSize: 12, color: "var(--ink-soft)", marginTop: 0 }}>
-            點選任一組可查看組員個別進度與內容（唯讀，無法修改）。　●已完成　◐進行中　○尚未開始
+            點選任一組可查看組員個別進度與內容（唯讀，無法修改）。●已完成　◐進行中　○尚未開始，顏色代表關卡：
+            {Object.entries(CHAPTER_COLORS).map(([g, color]) => (
+              <span key={g} style={{ color, marginLeft: 8, fontWeight: 700 }}>● {g}</span>
+            ))}
           </p>
           {groups.map((g) => {
             const pct = Math.round((g.completed / g.total) * 100);
@@ -106,9 +120,10 @@ export default async function TeacherDashboard({ searchParams }: { searchParams:
                     <div style={{ width: `${pct}%`, height: "100%", background: STATUS_DOT[g.status] }} />
                   </div>
                   <div style={{ fontSize: 13, letterSpacing: 2 }}>
-                    {g.matrix.map((m) => (
-                      <span key={m.key} title={m.label} style={{ color: CELL[m.status].color }}>{CELL[m.status].symbol}</span>
-                    ))}
+                    {g.matrix.map((m) => {
+                      const c = cellStyle(m.status, m.key);
+                      return <span key={m.key} title={m.label} style={{ color: c.color }}>{c.symbol}</span>;
+                    })}
                   </div>
                 </div>
               </Link>

@@ -37,11 +37,11 @@ export default function InterviewPage() {
       </p>
       <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
         <div style={{ flex: "1 1 320px" }}>
-          <p style={{ fontWeight: 700, fontSize: 13, color: "var(--terracotta)", margin: "0 0 8px" }}>左欄｜導師</p>
+          <p style={{ fontWeight: 700, fontSize: 13, color: "var(--terracotta)", margin: "0 0 8px" }}>導師</p>
           <MiniFieldColumn fieldKey="interview_teacher" onDone={() => markDone("interview_teacher")} />
         </div>
         <div style={{ flex: "1 1 320px" }}>
-          <p style={{ fontWeight: 700, fontSize: 13, color: "var(--terracotta)", margin: "0 0 8px" }}>右欄｜護理師</p>
+          <p style={{ fontWeight: 700, fontSize: 13, color: "var(--terracotta)", margin: "0 0 8px" }}>護理師</p>
           <MiniFieldColumn fieldKey="interview_nurse" onDone={() => markDone("interview_nurse")} />
         </div>
       </div>

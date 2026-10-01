@@ -7,6 +7,7 @@ export type FieldConfig = {
   multiline?: boolean;
   highlight?: boolean; // render label in bold red — used for scoring-critical fields
   skipIndividual?: boolean; // skip the "我的想法" individual-draft step, go straight to group final
+  highlightPhrase?: string; // substring within prompt to render bold red
 };
 
 export const FIELDS: FieldConfig[] = [
@@ -36,11 +37,11 @@ export const FIELDS: FieldConfig[] = [
   // ---- 第三關：訪談綱要（左右分欄：導師／護理師）----
   { key: "interview_teacher", stage: 1, group: "訪談綱要",
     label: "訪談綱要－導師",
-    prompt: "由負責「導師」這一欄的 4 位組員填寫。想請教班級導師哪些問題？建議涵蓋：\n・這個班級目前失智症衛教現況（是否曾帶入相關議題、用什麼方式）\n・這群三、四年級學童的教學方法建議與學生特性（如專注力、理解力、特殊需求）\n・方便配合評估活動的時間",
+    prompt: "由負責「導師」的 4 位組員填寫。想請教班級導師哪些問題？建議涵蓋：\n・這個班級目前失智症衛教現況（是否曾帶入相關議題、用什麼方式）\n・這群三、四年級學童的教學方法建議與學生特性（如專注力、理解力、特殊需求）",
     multiline: true },
   { key: "interview_nurse", stage: 1, group: "訪談綱要",
     label: "訪談綱要－護理師",
-    prompt: "由負責「護理師」這一欄的 4 位組員填寫。想請教校護或社區護理師哪些問題？建議涵蓋：\n・國小目前失智症衛教現況與可運用的衛教資源\n・不同年級的衛教安排建議\n・與學童溝通失智症相關議題時的注意事項",
+    prompt: "由負責「護理師」的 4 位組員填寫。想請教校護哪些問題？建議涵蓋：\n・國小目前失智症衛教現況與可運用的衛教資源\n・不同年級的衛教安排建議\n・與學童溝通失智症相關議題時的注意事項",
     multiline: true },
 
   // ---- 第四關：AI迭代結果（使用 NotebookLM，20分鐘）----
@@ -56,7 +57,8 @@ export const FIELDS: FieldConfig[] = [
   // ---- 第五關：活動規劃書（5個子項整合成一頁）----
   { key: "act_topic", stage: 1, group: "活動規劃書",
     label: "活動主題",
-    prompt: "這次 30 分鐘「學習者評估活動」要怎麼命名？活動目的是蒐集資料做評估，不是正式衛教，取名時可以反映這一點。" },
+    prompt: "這次 30 分鐘「學習者評估活動」要怎麼命名？活動目的是蒐集資料做評估，不是正式衛教，取名時可以反映這一點。",
+    highlightPhrase: "不是正式衛教" },
   { key: "act_desc", stage: 1, group: "活動規劃書",
     label: "活動規劃說明",
     prompt: "簡述這個活動的設計理念：為什麼這樣設計？想從中蒐集到學習需求、準備度、學習風格、教學環境哪些資訊？跟你們選定的主題方向有什麼關聯？",
