@@ -27,6 +27,9 @@ export default function ConsistencyCheckPage() {
   const [drafts, setDrafts] = useState<Record<number, { stance: string; reason: string }>>({});
   const [busyItem, setBusyItem] = useState<number | null>(null);
 
+  // load() only ever reflects its OWN fetch outcome. It never clears an
+  // error set by whichever action called it — otherwise the error flashes
+  // and disappears before anyone can read it.
   async function load() {
     const res = await fetch("/api/consistency");
     if (!res.ok) {
@@ -35,7 +38,6 @@ export default function ConsistencyCheckPage() {
       setLoaded(true);
       return;
     }
-    setErr("");
     const d = await res.json();
     setRan(d.ran);
     setItems(d.items);
@@ -47,6 +49,7 @@ export default function ConsistencyCheckPage() {
 
   async function startCheck() {
     setChecking(true);
+    setErr("");
     const res = await fetch("/api/consistency/check", { method: "POST" });
     if (!res.ok) {
       const d = await res.json().catch(() => ({}));
@@ -63,10 +66,15 @@ export default function ConsistencyCheckPage() {
   async function saveMine(itemId: number) {
     const d = drafts[itemId] || { stance: "agree", reason: "" };
     setBusyItem(itemId);
-    await fetch("/api/consistency/respond", {
+    setErr("");
+    const res = await fetch("/api/consistency/respond", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ itemId, stance: d.stance, reason: d.reason }),
     });
+    if (!res.ok) {
+      const dd = await res.json().catch(() => ({}));
+      setErr(dd.error || "儲存失敗");
+    }
     setBusyItem(null);
     load();
   }
@@ -74,6 +82,7 @@ export default function ConsistencyCheckPage() {
   async function finalize(itemId: number) {
     const d = drafts[itemId] || { stance: "agree", reason: "" };
     setBusyItem(itemId);
+    setErr("");
     const res = await fetch("/api/consistency/finalize", {
       method: "PUT", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ itemId, stance: d.stance, reason: d.reason }),
@@ -81,8 +90,6 @@ export default function ConsistencyCheckPage() {
     if (!res.ok) {
       const dd = await res.json().catch(() => ({}));
       setErr(dd.error || "定稿失敗");
-    } else {
-      setErr("");
     }
     setBusyItem(null);
     load();
@@ -90,10 +97,15 @@ export default function ConsistencyCheckPage() {
 
   async function recheck(itemId: number) {
     setBusyItem(itemId);
-    await fetch("/api/consistency/recheck", {
+    setErr("");
+    const res = await fetch("/api/consistency/recheck", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ itemId }),
     });
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}));
+      setErr(d.error || "重新檢核失敗");
+    }
     setBusyItem(null);
     load();
   }
@@ -116,10 +128,15 @@ export default function ConsistencyCheckPage() {
         這一關不是幫你們寫內容，而是用 AI 比對「AI迭代後最終結果」跟「活動規劃書」是否真的互相呼應，找出邏輯不一致的地方。
       </p>
 
+      {err && (
+        <div className="card-story" style={{ borderLeft: "4px solid #a4432b" }}>
+          <p style={{ color: "#a4432b", fontSize: 13.5, margin: 0, whiteSpace: "pre-wrap" }}>{err}</p>
+        </div>
+      )}
+
       {!ran && (
         <div className="card-story" style={{ textAlign: "center" }}>
           <p style={{ fontSize: 14, marginBottom: 10 }}>準備好後，開始第一次 AI 檢核。</p>
-          {err && <p style={{ color: "#a4432b", fontSize: 13 }}>{err}</p>}
           <button className="btn-story" disabled={checking} onClick={startCheck}>
             {checking ? "檢核中…" : "開始 AI 檢核"}
           </button>
@@ -194,7 +211,6 @@ export default function ConsistencyCheckPage() {
                   disabled={busyItem === it.id} onClick={() => finalize(it.id)}>
                   {busyItem === it.id ? "送出中…" : "以我目前的立場定稿"}
                 </button>
-                {err && <p style={{ color: "#a4432b", fontSize: 12.5, marginTop: 6 }}>{err}</p>}
               </div>
             </div>
           )}
