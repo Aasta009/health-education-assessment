@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ensureReady, getPool } from "@/lib/db";
 import { readSession } from "@/lib/session";
-import { FIELDS, ALL_KEYS, GROUP_STORY, CONSOLIDATED_GROUPS, ORDERED_GROUPS } from "@/lib/fields";
+import { FIELDS, GROUP_STORY, CONSOLIDATED_GROUPS, ORDERED_GROUPS } from "@/lib/fields";
 import ExportDiscussionButton from "./_shared/ExportDiscussionButton";
 import TopicSelect from "./_shared/TopicSelect";
 
@@ -41,7 +41,6 @@ export default async function StudentDashboard() {
     [session.cls, session.groupNo]
   );
   const doneKeys = new Set(finals.rows.map((r) => r.field_key));
-  const allDone = ALL_KEYS.every((k) => doneKeys.has(k));
 
   const discussionKeys = FIELDS.filter((f) => ["主題方向", "學習者評估內容規劃", "訪談綱要"].includes(f.group)).map((f) => f.key);
   const discussionReady = discussionKeys.every((k) => doneKeys.has(k));
@@ -58,7 +57,7 @@ export default async function StudentDashboard() {
       <div className="card-story">
         <h4 style={{ marginTop: 0, fontSize: 15 }}>關於這份作業</h4>
         <p style={{ fontSize: 13.5, color: "var(--ink-soft)", lineHeight: 1.8, margin: 0 }}>
-          這五關要帶你們完成「學習者評估」的前置規劃：確認主題、規劃評估內容、訪談關鍵人物、跟 AI 討論修正、最後完成活動規劃書初版。
+          這六關要帶你們完成「學習者評估」的前置規劃：確認主題、規劃評估內容、訪談關鍵人物、跟 AI 討論修正、完成活動規劃書，最後用 AI 檢核兩者是否一致。
           每一關的評估方向與內容，都需要組員仔細思考、負責任地共同決定——這些決定會直接影響後續正式衛教活動的設計，請不要隨意填寫或急著定稿。
           每個欄位都遵循「先個人想法、再組內討論定稿」的流程，任何組員都可以按下定稿，定稿後會直接告訴你下一步要去哪裡。
         </p>
@@ -111,6 +110,22 @@ export default async function StudentDashboard() {
                 </div>
               </div>
 
+              {g === "活動規劃書" && (
+                <div className="card-story" style={{ marginLeft: 14, marginBottom: 26, background: groupDone ? "#FCF8ED" : "#f3ecdd", textAlign: "center" }}>
+                  <h4 style={{ marginTop: 0, fontSize: 15 }}>第六關　AI一致性檢核</h4>
+                  {groupDone ? (
+                    <>
+                      <p style={{ fontSize: 13, color: "var(--ink-soft)", marginBottom: 10 }}>
+                        活動規劃書完成了，用 AI 比對它跟 AI迭代結果是否真的呼應一致。
+                      </p>
+                      <Link href="/s/consistency-check"><button className="btn-story">前往第六關</button></Link>
+                    </>
+                  ) : (
+                    <p style={{ fontSize: 13, color: "#8a5a1f", margin: 0 }}>完成活動規劃書的組內定稿後，這裡會開放。</p>
+                  )}
+                </div>
+              )}
+
               {g === "訪談綱要" && (
                 <div className="card-story" style={{ marginLeft: 14, marginBottom: 26, background: discussionReady ? "#FCF8ED" : "#f3ecdd", textAlign: "center" }}>
                   <h4 style={{ marginTop: 0, fontSize: 15 }}>前三關完成後</h4>
@@ -131,11 +146,6 @@ export default async function StudentDashboard() {
         })}
       </div>
 
-      {allDone && (
-        <div className="card-story" style={{ textAlign: "center" }}>
-          <p style={{ margin: 0, fontSize: 14, color: "var(--forest)" }}>✓ 五關全部完成了！</p>
-        </div>
-      )}
     </main>
   );
 }

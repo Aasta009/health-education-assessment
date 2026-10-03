@@ -67,6 +67,34 @@ export async function GET(_req: NextRequest) {
     });
   }
 
+  const ws3 = wb.addWorksheet("AI一致性檢核");
+  const items = await pool.query(
+    `SELECT class, group_no, id, issue_text, status, resolution, created_at FROM consistency_items
+     ORDER BY class, group_no, id`
+  );
+  const finalsRes = await pool.query(`SELECT item_id, stance, reason, finalized_by_name FROM consistency_finals`);
+  const finalByItem = new Map(finalsRes.rows.map((r) => [r.item_id, r]));
+  ws3.columns = [
+    { header: "班級", key: "class", width: 8 },
+    { header: "組別", key: "group_no", width: 8 },
+    { header: "項目", key: "issue", width: 50 },
+    { header: "狀態", key: "status", width: 10 },
+    { header: "處理方式", key: "resolution", width: 14 },
+    { header: "組決定", key: "stance", width: 10 },
+    { header: "理由", key: "reason", width: 40 },
+    { header: "定稿人", key: "finalized_by_name", width: 12 },
+    { header: "建立時間", key: "created_at", width: 20 },
+  ];
+  for (const it of items.rows) {
+    const f = finalByItem.get(it.id);
+    ws3.addRow({
+      class: it.class, group_no: it.group_no, issue: it.issue_text,
+      status: it.status === "resolved" ? "已解決" : "待處理", resolution: it.resolution || "",
+      stance: f ? (f.stance === "agree" ? "贊同" : "不贊同") : "", reason: f?.reason || "",
+      finalized_by_name: f?.finalized_by_name || "", created_at: formatTaipei(it.created_at),
+    });
+  }
+
   const buffer = await wb.xlsx.writeBuffer();
   return new NextResponse(Buffer.from(buffer), {
     headers: {

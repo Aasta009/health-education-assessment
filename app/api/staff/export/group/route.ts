@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 import { ensureReady } from "@/lib/db";
 import { readSession } from "@/lib/session";
-import { ALL_KEYS } from "@/lib/fields";
-import { buildDocxForKeys } from "@/lib/report";
+import { buildFinalPlanDocx } from "@/lib/report";
+import { contentDispositionHeader } from "@/lib/format";
 
 export async function GET(req: NextRequest) {
   await ensureReady();
@@ -17,14 +17,14 @@ export async function GET(req: NextRequest) {
   if (!cls || !groupNo) {
     return NextResponse.json({ error: "參數錯誤" }, { status: 400 });
   }
-  const buffer = await buildDocxForKeys(cls, groupNo, ALL_KEYS, "學習者評估報告");
+  const buffer = await buildFinalPlanDocx(cls, groupNo);
   if (!buffer) {
     return NextResponse.json({ error: "這一組尚未完成定稿，無法匯出" }, { status: 409 });
   }
   return new NextResponse(buffer, {
     headers: {
       "Content-Type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      "Content-Disposition": `attachment; filename="learner-assessment-${cls}${groupNo}.docx"`,
+      "Content-Disposition": contentDispositionHeader(`活動規劃書_${cls}${groupNo}.docx`, `activity-plan-${cls}${groupNo}.docx`),
     },
   });
 }

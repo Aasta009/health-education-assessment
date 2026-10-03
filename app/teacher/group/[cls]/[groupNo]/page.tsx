@@ -53,6 +53,21 @@ export default async function TeacherGroupDetail({ params }: { params: { cls: st
     [cls, groupNo]
   );
 
+  const consistencyItems = await pool.query(
+    `SELECT id, issue_text, status, resolution, created_at FROM consistency_items
+     WHERE class=$1 AND group_no=$2 ORDER BY id ASC`,
+    [cls, groupNo]
+  );
+  const consistencyFinals = await pool.query(
+    `SELECT item_id, stance, reason, finalized_by_name FROM consistency_finals WHERE item_id = ANY($1)`,
+    [consistencyItems.rows.map((r) => r.id)]
+  );
+  const consistencyFinalMap = new Map(consistencyFinals.rows.map((r) => [r.item_id, r]));
+  const consistencyRan = await pool.query(
+    `SELECT 1 FROM consistency_runs WHERE class=$1 AND group_no=$2 AND kind='full' LIMIT 1`,
+    [cls, groupNo]
+  );
+
   const finalMap = new Map(finals.rows.map((r) => [r.field_key, r]));
   const byField = new Map<string, any[]>();
   const membersSeen = new Map<string, string>();
@@ -131,6 +146,25 @@ export default async function TeacherGroupDetail({ params }: { params: { cls: st
           ))}
         </div>
       )}
+
+      <div className="card-story">
+        <h4 style={{ marginTop: 0 }}>第六關　AI一致性檢核</h4>
+        {consistencyRan.rows.length === 0 ? (
+          <p style={{ color: "#999" }}>尚未開始檢核</p>
+        ) : consistencyItems.rows.length === 0 ? (
+          <p style={{ color: "var(--forest)" }}>✓ 第一次檢核即完全通過，沒有發現問題</p>
+        ) : (
+          consistencyItems.rows.map((it) => {
+            const f = consistencyFinalMap.get(it.id);
+            return (
+              <p key={it.id} style={{ fontSize: 13.5, margin: "6px 0", borderLeft: `3px solid ${it.status === "resolved" ? "#3F5B44" : "#D6A756"}`, paddingLeft: 8 }}>
+                {it.status === "resolved" ? "✓" : "⚠"} {it.issue_text}
+                {f && <><br /><span style={{ fontSize: 12, color: "#7a6a52" }}>組決定：{f.stance === "agree" ? "贊同" : "不贊同"}{f.reason && `（${f.reason}）`}　— {f.finalized_by_name}</span></>}
+              </p>
+            );
+          })
+        )}
+      </div>
 
       <h3 className="story-title" style={{ fontSize: 17 }}>各關卡任務完成狀況</h3>
       {FIELDS.map((f) => {

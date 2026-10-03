@@ -93,6 +93,54 @@ CREATE TABLE IF NOT EXISTS finalize_log (
   finalized_by_name TEXT,
   created_at TIMESTAMPTZ DEFAULT now()
 );
+
+-- 第六關：AI 一致性檢核 (Gemini compares the AI-iteration result against the
+-- activity plan). Each flagged inconsistency is its own row; items are
+-- never deleted, only transitioned through status/resolution so the whole
+-- back-and-forth stays auditable.
+CREATE TABLE IF NOT EXISTS consistency_items (
+  id SERIAL PRIMARY KEY,
+  class TEXT NOT NULL,
+  group_no INT NOT NULL,
+  issue_text TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'flagged', -- flagged | resolved
+  resolution TEXT,                         -- null | revise_pending | revised | disagree
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Each group member's own stance on one item (individual step, mirrors
+-- "responses" table).
+CREATE TABLE IF NOT EXISTS consistency_responses (
+  id SERIAL PRIMARY KEY,
+  item_id INT NOT NULL REFERENCES consistency_items(id),
+  student_id TEXT NOT NULL,
+  stance TEXT,
+  reason TEXT,
+  updated_at TIMESTAMPTZ DEFAULT now(),
+  UNIQUE(item_id, student_id)
+);
+
+-- Group-decided stance on one item (mirrors "group_finals" table).
+CREATE TABLE IF NOT EXISTS consistency_finals (
+  item_id INT PRIMARY KEY REFERENCES consistency_items(id),
+  stance TEXT NOT NULL,
+  reason TEXT,
+  finalized_by TEXT,
+  finalized_by_name TEXT,
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Audit trail of every Gemini call (full check or per-item recheck).
+CREATE TABLE IF NOT EXISTS consistency_runs (
+  id SERIAL PRIMARY KEY,
+  class TEXT NOT NULL,
+  group_no INT NOT NULL,
+  kind TEXT NOT NULL, -- 'full' | 'recheck'
+  item_id INT,
+  raw_response TEXT,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
 `;
 
 async function ensureSchemaAndSeed() {
