@@ -2,10 +2,16 @@
 // against their activity plan (B) and flag any inconsistencies. This is a
 // consistency checker, not a content generator — it never writes the
 // students' content for them.
-const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-3.8-flash";
+// Primary model first, then a fallback if the primary is persistently
+// overloaded (503) — new models often see heavy launch-day demand spikes.
+// Both configurable via env vars without a code change.
+const MODELS = [
+  process.env.GEMINI_MODEL || "gemini-3.8-flash",
+  process.env.GEMINI_FALLBACK_MODEL || "gemini-2.5-flash",
+];
 
-function endpoint() {
-  return `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+function endpoint(model: string) {
+  return `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
 }
 
 function apiKey() {
@@ -16,35 +22,42 @@ function apiKey() {
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+async function callOnce(model: string, prompt: string): Promise<{ ok: true; text: string; raw: string } | { ok: false; status: number; raw: string }> {
+  const res = await fetch(endpoint(model), {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey() },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: { responseMimeType: "application/json" },
+    }),
+  });
+  const raw = await res.text();
+  if (!res.ok) return { ok: false, status: res.status, raw };
+  const data = JSON.parse(raw);
+  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!text) return { ok: false, status: 0, raw: "Gemini 沒有回傳內容" };
+  return { ok: true, text, raw };
+}
+
 // Google's Gemini endpoint intermittently returns 503 ("high demand") or 429
-// (rate limit) — both are transient, so retry a few times with backoff
-// before surfacing an error to the student.
+// (rate limit) — both are transient, so retry a couple of times per model,
+// then fall through to the next model in MODELS, before giving up.
 async function callGemini(prompt: string): Promise<{ text: string; raw: string }> {
-  const maxAttempts = 4;
   let lastErr: Error | null = null;
 
-  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-    const res = await fetch(endpoint(), {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey() },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { responseMimeType: "application/json" },
-      }),
-    });
-    const raw = await res.text();
-
-    if (res.ok) {
-      const data = JSON.parse(raw);
-      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (!text) throw new Error("Gemini 沒有回傳內容");
-      return { text, raw };
+  for (const model of MODELS) {
+    const attemptsForThisModel = 2;
+    for (let attempt = 1; attempt <= attemptsForThisModel; attempt++) {
+      const result = await callOnce(model, prompt);
+      if (result.ok === true) {
+        return { text: result.text, raw: result.raw };
+      } else {
+        const transient = result.status === 503 || result.status === 429;
+        lastErr = new Error(`Gemini API 錯誤 (${model}${result.status ? `, ${result.status}` : ""}): ${result.raw.slice(0, 500)}`);
+        if (!transient) break; // non-transient — no point retrying this model
+        if (attempt < attemptsForThisModel) await sleep(attempt * 1500);
+      }
     }
-
-    const transient = res.status === 503 || res.status === 429;
-    lastErr = new Error(`Gemini API 錯誤 (${res.status}): ${raw.slice(0, 500)}`);
-    if (!transient || attempt === maxAttempts) throw lastErr;
-    await sleep(attempt * 1000); // 1s, 2s, 3s backoff
   }
   throw lastErr || new Error("Gemini API 呼叫失敗");
 }
