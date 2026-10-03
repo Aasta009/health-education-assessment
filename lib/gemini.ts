@@ -14,21 +14,39 @@ function apiKey() {
   return key;
 }
 
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+// Google's Gemini endpoint intermittently returns 503 ("high demand") or 429
+// (rate limit) — both are transient, so retry a few times with backoff
+// before surfacing an error to the student.
 async function callGemini(prompt: string): Promise<{ text: string; raw: string }> {
-  const res = await fetch(endpoint(), {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey() },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: { responseMimeType: "application/json" },
-    }),
-  });
-  const raw = await res.text();
-  if (!res.ok) throw new Error(`Gemini API 錯誤 (${res.status}): ${raw.slice(0, 500)}`);
-  const data = JSON.parse(raw);
-  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!text) throw new Error("Gemini 沒有回傳內容");
-  return { text, raw };
+  const maxAttempts = 4;
+  let lastErr: Error | null = null;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    const res = await fetch(endpoint(), {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey() },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { responseMimeType: "application/json" },
+      }),
+    });
+    const raw = await res.text();
+
+    if (res.ok) {
+      const data = JSON.parse(raw);
+      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!text) throw new Error("Gemini 沒有回傳內容");
+      return { text, raw };
+    }
+
+    const transient = res.status === 503 || res.status === 429;
+    lastErr = new Error(`Gemini API 錯誤 (${res.status}): ${raw.slice(0, 500)}`);
+    if (!transient || attempt === maxAttempts) throw lastErr;
+    await sleep(attempt * 1000); // 1s, 2s, 3s backoff
+  }
+  throw lastErr || new Error("Gemini API 呼叫失敗");
 }
 
 function extractJson(text: string): any {

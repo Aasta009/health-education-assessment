@@ -131,6 +131,9 @@ export default function ConsistencyCheckPage() {
       {err && (
         <div className="card-story" style={{ borderLeft: "4px solid #a4432b" }}>
           <p style={{ color: "#a4432b", fontSize: 13.5, margin: 0, whiteSpace: "pre-wrap" }}>{err}</p>
+          {err.includes("503") || err.includes("429") ? (
+            <p style={{ color: "#8a5a1f", fontSize: 12.5, margin: "6px 0 0" }}>這通常是 Google 伺服器暫時忙碌，稍等一下再按一次通常就會成功。</p>
+          ) : null}
         </div>
       )}
 
