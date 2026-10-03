@@ -40,9 +40,19 @@ async function callOnce(model: string, prompt: string): Promise<{ ok: true; text
   return { ok: true, text, raw };
 }
 
-// Google's Gemini endpoint intermittently returns 503 ("high demand") or 429
-// (rate limit) — both are transient, so retry a couple of times per model,
-// then fall through to the next model in MODELS, before giving up.
+// A 429 can mean two very different things:
+// - a short-lived rate limit (worth retrying in a few seconds), or
+// - a daily/free-tier quota that's fully used up (RESOURCE_EXHAUSTED) —
+//   retrying for a few seconds does nothing, Google says to wait hours.
+// We detect the quota-exhausted case and fail fast with a clear message
+// instead of burning retries on something that can't succeed yet.
+function isQuotaExhausted(raw: string): boolean {
+  return raw.includes("RESOURCE_EXHAUSTED") || raw.includes("exceeded your current quota");
+}
+
+// Google's Gemini endpoint intermittently returns 503 ("high demand") or a
+// short-lived 429 — both are transient, so retry a couple of times per
+// model, then fall through to the next model in MODELS, before giving up.
 async function callGemini(prompt: string): Promise<{ text: string; raw: string }> {
   let lastErr: Error | null = null;
 
@@ -53,6 +63,12 @@ async function callGemini(prompt: string): Promise<{ text: string; raw: string }
       if (result.ok === true) {
         return { text: result.text, raw: result.raw };
       } else {
+        if (isQuotaExhausted(result.raw)) {
+          throw new Error(
+            `Gemini 配額已用完（${model}）：這是這個方案每日／每分鐘的用量上限，不是暫時性問題，重試無法解決。` +
+            `請到 Google AI Studio／Cloud Console 確認方案與配額，啟用計費或等配額重置後再試。\n原始訊息：${result.raw.slice(0, 500)}`
+          );
+        }
         const transient = result.status === 503 || result.status === 429;
         lastErr = new Error(`Gemini API 錯誤 (${model}${result.status ? `, ${result.status}` : ""}): ${result.raw.slice(0, 500)}`);
         if (!transient) break; // non-transient — no point retrying this model
