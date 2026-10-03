@@ -4,6 +4,7 @@ import { ensureReady, getPool } from "@/lib/db";
 import { readSession } from "@/lib/session";
 import { ALL_KEYS, FIELDS } from "@/lib/fields";
 import { getClassDashboard } from "@/lib/dashboard";
+import ResetTestGroupButton from "./ResetTestGroupButton";
 
 export const dynamic = "force-dynamic";
 
@@ -94,6 +95,8 @@ export default async function TeacherDashboard({ searchParams }: { searchParams:
           <h4 style={{ marginTop: 0 }}>匯出</h4>
           <a href="/api/staff/export/raw"><button className="btn-story outline">匯出所有學生完整學習過程（Excel）</button></a>
         </div>
+
+        {session.kind === "ta" && <ResetTestGroupButton />}
 
         {/* Group progress — click any group to see its members (read-only) */}
         <div className="card-story">
