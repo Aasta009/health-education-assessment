@@ -2,12 +2,13 @@
 // against their activity plan (B) and flag any inconsistencies. This is a
 // consistency checker, not a content generator — it never writes the
 // students' content for them.
-// Primary model first, then a fallback if the primary is persistently
-// overloaded (503) — new models often see heavy launch-day demand spikes.
-// Both configurable via env vars without a code change.
+// Primary model, plus an optional fallback — only used if you explicitly set
+// GEMINI_FALLBACK_MODEL. No fallback is guessed/hardcoded here: picking a
+// wrong model name wastes a round trip for no benefit, so this only tries
+// models you've confirmed actually work for your key.
 const MODELS = [
   process.env.GEMINI_MODEL || "gemini-3.8-flash",
-  process.env.GEMINI_FALLBACK_MODEL || "gemini-2.5-flash",
+  ...(process.env.GEMINI_FALLBACK_MODEL ? [process.env.GEMINI_FALLBACK_MODEL] : []),
 ];
 
 function endpoint(model: string) {
@@ -46,7 +47,7 @@ async function callGemini(prompt: string): Promise<{ text: string; raw: string }
   let lastErr: Error | null = null;
 
   for (const model of MODELS) {
-    const attemptsForThisModel = 2;
+    const attemptsForThisModel = 3;
     for (let attempt = 1; attempt <= attemptsForThisModel; attempt++) {
       const result = await callOnce(model, prompt);
       if (result.ok === true) {

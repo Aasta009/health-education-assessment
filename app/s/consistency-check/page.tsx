@@ -26,6 +26,7 @@ export default function ConsistencyCheckPage() {
   const [checking, setChecking] = useState(false);
   const [drafts, setDrafts] = useState<Record<number, { stance: string; reason: string }>>({});
   const [busyItem, setBusyItem] = useState<number | null>(null);
+  const [recheckingAll, setRecheckingAll] = useState(false);
 
   // load() only ever reflects its OWN fetch outcome. It never clears an
   // error set by whichever action called it — otherwise the error flashes
@@ -95,20 +96,19 @@ export default function ConsistencyCheckPage() {
     load();
   }
 
-  async function recheck(itemId: number) {
-    setBusyItem(itemId);
+  async function recheckAll() {
+    setRecheckingAll(true);
     setErr("");
-    const res = await fetch("/api/consistency/recheck", {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ itemId }),
-    });
+    const res = await fetch("/api/consistency/recheck-all", { method: "POST" });
     if (!res.ok) {
       const d = await res.json().catch(() => ({}));
       setErr(d.error || "重新檢核失敗");
     }
-    setBusyItem(null);
+    setRecheckingAll(false);
     load();
   }
+
+  const pendingCount = items.filter((it) => it.resolution === "revise_pending").length;
 
   if (!loaded) return <main className="container"><p>載入中…</p></main>;
   if (err && !ran && items.length === 0) {
@@ -152,6 +152,17 @@ export default function ConsistencyCheckPage() {
         </div>
       )}
 
+      {pendingCount > 0 && (
+        <div className="card-story" style={{ textAlign: "center", background: "#f3ecdd" }}>
+          <p style={{ margin: "0 0 10px", fontSize: 13.5 }}>
+            有 {pendingCount} 項已標記為「需要修改」。請先到活動規劃書把對應的內容都改好，再一次送出複查。
+          </p>
+          <button className="btn-story" disabled={recheckingAll} onClick={recheckAll}>
+            {recheckingAll ? "複查中…" : `重新檢核所有已修改項目（${pendingCount}）`}
+          </button>
+        </div>
+      )}
+
       {items.map((it) => (
         <div className="card-story" key={it.id}>
           <p style={{ margin: "0 0 10px", fontSize: 14, fontWeight: it.status === "flagged" ? 700 : 400 }}>
@@ -168,12 +179,9 @@ export default function ConsistencyCheckPage() {
           {it.status === "flagged" && it.resolution === "revise_pending" && (
             <div>
               <p style={{ fontSize: 13, color: "#8a5a1f" }}>
-                組員已同意這項需要修改，請前往「活動規劃書」調整內容，完成後回來點擊重新檢核。
+                組員已同意這項需要修改，請前往「活動規劃書」調整內容。全部改好後，用下方的「重新檢核所有已修改項目」一次送查。
               </p>
-              <a href="/s/activity-plan"><button className="btn-story outline" style={{ fontSize: 13, marginRight: 8 }}>前往活動規劃書</button></a>
-              <button className="btn-story" style={{ fontSize: 13 }} disabled={busyItem === it.id} onClick={() => recheck(it.id)}>
-                {busyItem === it.id ? "檢核中…" : "我已修改，重新檢核"}
-              </button>
+              <a href="/s/activity-plan"><button className="btn-story outline" style={{ fontSize: 13 }}>前往活動規劃書</button></a>
             </div>
           )}
 
